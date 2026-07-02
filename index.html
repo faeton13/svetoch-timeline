@@ -289,7 +289,7 @@ const curve=new THREE.CatmullRomCurve3(pathPts,false,'catmullrom',0.4);
 }
 
 /* text sprite helper */
-function textSprite(text,{size=44,color='#e8e4d8',bg=null,pad=14}={}){
+function textSprite(text,{size=44,color='#e8e4d8',bg=null,pad=14,mult=1}={}){
   const c=document.createElement('canvas'), ctx=c.getContext('2d');
   ctx.font=`${size}px Georgia`;
   const w=ctx.measureText(text).width;
@@ -300,7 +300,7 @@ function textSprite(text,{size=44,color='#e8e4d8',bg=null,pad=14}={}){
   ctx.fillText(text,pad,c.height/2);
   const tex=new THREE.CanvasTexture(c); tex.minFilter=THREE.LinearFilter;
   const sp=new THREE.Sprite(new THREE.SpriteMaterial({map:tex,transparent:true,depthWrite:false}));
-  const s=MOBILE?0.020:0.028;
+  const s=(MOBILE?0.020:0.028)*mult;
   sp.scale.set(c.width*s,c.height*s,1);
   return sp;
 }
@@ -308,6 +308,7 @@ function textSprite(text,{size=44,color='#e8e4d8',bg=null,pad=14}={}){
 /* event markers */
 const markers=[]; // {mesh,label,ev,idx,pos}
 const pickables=[];
+const gates=[];
 const geoByType={
   location:new THREE.ConeGeometry(0.9,2.2,6),
   event:new THREE.SphereGeometry(0.75,16,12),
@@ -349,9 +350,9 @@ for(let i=0;i<N;i++){
   const mo=monthOf(ev.date);
   if(mo && mo!==lastMonth){
     lastMonth=mo;
-    const gate=textSprite(`— ${mo} ${yearOf(ev.date)} —`,{size:52,color:'#d4af6a'});
+    const gate=textSprite(`— ${mo} ${yearOf(ev.date)} —`,{size:52,color:'#d4af6a',mult:MOBILE?0.55:1});
     gate.position.set(p.x,p.y+7.5,p.z);
-    scene.add(gate);
+    scene.add(gate); gates.push(gate);
   }
   if(isNow){
     const halo=new THREE.Mesh(new THREE.RingGeometry(1.4,1.8,32),
@@ -599,6 +600,11 @@ function animate(){
     m.label.visible=d<(MOBILE?58:80);
     m.mesh.rotation.y=el*0.6;
     if(m.mesh.userData.halo){ m.mesh.userData.halo.scale.setScalar(1+Math.sin(el*3)*0.15); }
+  }
+  for(const g of gates){
+    const d=camera.position.distanceTo(g.position);
+    g.material.opacity=clamp((d-7)/9,0,1)*clamp(1.8-d/70,0,1);
+    g.visible=g.material.opacity>0.03;
   }
   fill.style.width=(progress*100)+'%';
   knob.style.left=(progress*100)+'%';
