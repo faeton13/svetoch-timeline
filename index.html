@@ -1,0 +1,600 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Хроники Светоча — Путь кампании</title>
+<meta property="og:type" content="website">
+<meta property="og:title" content="Хроники Светоча — Путь кампании">
+<meta property="og:description" content="Интерактивный 3D-таймлайн кампании «Светоч»: 96 событий пути, 57 сессий, кого встретили и что случилось — глазами летописца Линзи. 4710–4711 AR.">
+<meta property="og:url" content="https://faeton13.github.io/svetoch-timeline/">
+<meta property="og:image" content="https://faeton13.github.io/svetoch-timeline/og-cover.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="theme-color" content="#d4af6a">
+<style>
+  :root{
+    --bg:#0b0e1a; --panel:#141a2e; --panel2:#1b2340; --ink:#e8e4d8; --muted:#9aa3c0;
+    --gold:#d4af6a; --green:#4aa22c; --teal:#1fb3a5; --blue:#2154a7; --red:#c0563a; --pink:#ff0066;
+    --border:rgba(212,175,106,.25);
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--ink);
+    font-family:Georgia,'Times New Roman',serif}
+  #scene{position:fixed;inset:0;display:block}
+  .ui{position:fixed;z-index:10}
+
+  /* Header */
+  #hdr{top:0;left:0;right:0;padding:14px 22px;display:flex;align-items:baseline;gap:18px;
+    background:linear-gradient(180deg,rgba(11,14,26,.92),rgba(11,14,26,0));pointer-events:none}
+  #hdr h1{font-size:22px;letter-spacing:.06em;color:var(--gold);font-weight:normal}
+  #hdr .sub{font-size:13px;color:var(--muted);font-style:italic}
+  #tabs{margin-left:auto;display:flex;gap:8px;pointer-events:auto}
+  .tab{border:1px solid var(--border);background:rgba(20,26,46,.85);color:var(--muted);
+    padding:6px 16px;border-radius:20px;cursor:pointer;font-size:13px;font-family:inherit;transition:.2s}
+  .tab:hover{color:var(--ink);border-color:var(--gold)}
+  .tab.on{color:var(--gold);border-color:var(--gold);background:rgba(212,175,106,.12)}
+
+  /* Legend */
+  #legend{left:22px;bottom:64px;display:flex;flex-direction:column;gap:6px;font-size:12px;
+    color:var(--muted);background:rgba(11,14,26,.6);padding:10px 14px;border-radius:10px;
+    border:1px solid rgba(255,255,255,.06);pointer-events:none}
+  #legend span{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:8px;vertical-align:-1px}
+  #hint{left:22px;bottom:14px;font-size:12px;color:var(--muted);opacity:.8;pointer-events:none}
+
+  /* Scrubber */
+  #scrub{left:50%;transform:translateX(-50%);bottom:14px;width:min(720px,60vw);height:34px;pointer-events:auto;cursor:pointer}
+  #scrub .bar{position:absolute;left:0;right:0;top:15px;height:4px;background:rgba(255,255,255,.12);border-radius:2px}
+  #scrub .fill{position:absolute;left:0;top:15px;height:4px;background:var(--gold);border-radius:2px;width:0}
+  #scrub .months{position:absolute;inset:0;font-size:9px;color:var(--muted)}
+  #scrub .mt{position:absolute;top:0;transform:translateX(-50%);white-space:nowrap}
+  #scrub .mt i{display:block;width:1px;height:8px;background:rgba(255,255,255,.25);margin:14px auto 0;font-style:normal}
+  #scrub .knob{position:absolute;top:11px;width:12px;height:12px;border-radius:50%;background:var(--gold);
+    transform:translateX(-50%);box-shadow:0 0 10px rgba(212,175,106,.8)}
+
+  /* Detail card */
+  #card{right:22px;top:78px;width:340px;max-height:calc(100vh - 170px);overflow-y:auto;
+    background:linear-gradient(160deg,var(--panel),var(--panel2));border:1px solid var(--border);
+    border-radius:14px;padding:20px;display:none;box-shadow:0 12px 40px rgba(0,0,0,.5)}
+  #card.show{display:block}
+  #card .close{position:absolute;top:10px;right:14px;background:none;border:none;color:var(--muted);
+    font-size:18px;cursor:pointer;font-family:inherit}
+  #card .date{color:var(--gold);font-size:13px;letter-spacing:.08em;text-transform:uppercase}
+  #card h2{font-size:20px;margin:6px 0 4px;font-weight:normal}
+  #card .loc{color:var(--muted);font-size:13px;font-style:italic;margin-bottom:10px}
+  .badge{display:inline-block;font-size:11px;padding:2px 10px;border-radius:10px;margin-bottom:10px;
+    border:1px solid;letter-spacing:.05em}
+  #card h3{font-size:13px;color:var(--gold);margin:14px 0 6px;letter-spacing:.06em;text-transform:uppercase;font-weight:normal}
+  #card .sess{border:1px solid rgba(255,255,255,.08);border-radius:10px;padding:10px 12px;margin-bottom:8px;
+    cursor:pointer;transition:.2s;font-size:13px}
+  #card .sess:hover{border-color:var(--gold);background:rgba(212,175,106,.06)}
+  #card .sess b{color:var(--ink);font-weight:normal}
+  #card .sess .sn{color:var(--gold);font-size:11px}
+  #card p.sum{font-size:13px;color:var(--muted);line-height:1.5}
+  #card .navbtns{display:flex;gap:8px;margin-top:14px}
+  #card .navbtns button{flex:1;background:rgba(212,175,106,.1);border:1px solid var(--border);color:var(--gold);
+    padding:7px;border-radius:8px;cursor:pointer;font-family:inherit;font-size:12px}
+  #card .navbtns button:hover{background:rgba(212,175,106,.22)}
+
+  /* Overlay lists (Сессии / NPC) */
+  #overlay{position:fixed;inset:0;z-index:20;background:rgba(8,10,20,.94);display:none;overflow-y:auto;padding:80px 8vw 60px}
+  #overlay.show{display:block}
+  #overlay .close{position:fixed;top:18px;right:26px;background:none;border:1px solid var(--border);
+    color:var(--gold);font-size:15px;cursor:pointer;border-radius:50%;width:38px;height:38px;font-family:inherit}
+  #overlay h2{color:var(--gold);font-weight:normal;font-size:26px;margin-bottom:6px}
+  #overlay .osub{color:var(--muted);font-style:italic;margin-bottom:24px;font-size:14px}
+  #search{width:100%;max-width:420px;background:var(--panel);border:1px solid var(--border);color:var(--ink);
+    padding:10px 16px;border-radius:24px;font-family:inherit;font-size:14px;margin-bottom:24px;outline:none}
+  .scard{background:linear-gradient(160deg,var(--panel),var(--panel2));border:1px solid rgba(255,255,255,.07);
+    border-radius:14px;padding:18px 22px;margin-bottom:14px}
+  .scard:target{border-color:var(--gold)}
+  .scard .top{display:flex;align-items:baseline;gap:14px;flex-wrap:wrap}
+  .scard .sn{color:var(--gold);font-size:13px;letter-spacing:.06em}
+  .scard h3{font-size:18px;font-weight:normal}
+  .scard .rd{color:var(--muted);font-size:12px;margin-left:auto}
+  .scard p{color:var(--muted);font-size:14px;line-height:1.55;margin:8px 0}
+  .scard .tags{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+  .chip{font-size:11px;border:1px solid rgba(255,255,255,.14);color:var(--muted);padding:2px 10px;border-radius:10px}
+  .chip.npc{border-color:rgba(31,179,165,.4);color:var(--teal)}
+  .chip.loc{border-color:rgba(74,162,44,.4);color:#7fc35e}
+  details{margin-top:8px}
+  summary{cursor:pointer;color:var(--gold);font-size:12px;letter-spacing:.04em}
+  details ul{margin:8px 0 0 18px;color:var(--muted);font-size:13px;line-height:1.6}
+  .ncard{display:flex;gap:14px;align-items:baseline;background:var(--panel);border:1px solid rgba(255,255,255,.07);
+    border-radius:12px;padding:12px 18px;margin-bottom:8px}
+  .ncard b{font-weight:normal;color:var(--ink);min-width:180px}
+  .ncard .fs{color:var(--gold);font-size:12px;white-space:nowrap}
+  .ncard span{color:var(--muted);font-size:13px;line-height:1.4}
+
+  /* Event label tooltip */
+  #tip{position:fixed;z-index:15;pointer-events:none;background:rgba(11,14,26,.92);border:1px solid var(--border);
+    color:var(--ink);padding:6px 12px;border-radius:8px;font-size:13px;display:none;max-width:260px}
+  #tip .d{color:var(--gold);font-size:11px}
+
+  #loading{position:fixed;inset:0;z-index:50;background:var(--bg);display:flex;flex-direction:column;
+    align-items:center;justify-content:center;gap:14px;transition:opacity .8s}
+  #loading .rune{font-size:40px;color:var(--gold);animation:pulse 1.4s infinite}
+  #loading div{color:var(--muted);font-style:italic}
+  @keyframes pulse{0%,100%{opacity:.4}50%{opacity:1}}
+  ::-webkit-scrollbar{width:8px}::-webkit-scrollbar-thumb{background:#2a3354;border-radius:4px}
+  @media (max-width:800px){
+    #card{left:12px;right:12px;width:auto;top:auto;bottom:70px;max-height:45vh}
+    #legend{display:none}#scrub{width:80vw}
+    #hdr h1{font-size:16px}#hdr .sub{display:none}
+  }
+</style>
+</head>
+<body>
+<canvas id="scene"></canvas>
+
+<div id="loading"><div class="rune">✦</div><div>Линзи разворачивает карту странствий…</div></div>
+
+<div class="ui" id="hdr">
+  <h1>📖 Хроники Светоча</h1>
+  <span class="sub">путь кампании глазами летописца · 4710–4711 AR</span>
+  <div id="tabs">
+    <button class="tab on" data-t="road">Путь</button>
+    <button class="tab" data-t="sessions">Сессии</button>
+    <button class="tab" data-t="npcs">Кого встретили</button>
+  </div>
+</div>
+
+<div class="ui" id="legend">
+  <div><span style="background:#4aa22c"></span>Поселение / отдых</div>
+  <div><span style="background:#1fb3a5"></span>Событие</div>
+  <div><span style="background:#c0563a"></span>Стычка / бой</div>
+  <div><span style="background:#5a7fd6"></span>Дорога / путь</div>
+  <div><span style="background:#ff0066"></span>Мы здесь</div>
+</div>
+<div class="ui" id="hint">колесо / стрелки — вдоль пути · мышь — осмотреться · клик по маркеру — детали</div>
+
+<div class="ui" id="scrub">
+  <div class="bar"></div><div class="fill"></div><div class="months"></div><div class="knob"></div>
+</div>
+
+<div class="ui" id="card">
+  <button class="close" onclick="closeCard()">✕</button>
+  <div class="date" id="cDate"></div>
+  <h2 id="cTitle"></h2>
+  <div class="loc" id="cLoc"></div>
+  <span class="badge" id="cBadge"></span>
+  <div id="cBody"></div>
+  <div class="navbtns">
+    <button onclick="stepEvent(-1)">← Раньше</button>
+    <button onclick="stepEvent(1)">Позже →</button>
+  </div>
+</div>
+
+<div id="overlay">
+  <button class="close" onclick="closeOverlay()">✕</button>
+  <div id="ovContent"></div>
+</div>
+
+<div id="tip"><div class="d"></div><div class="t"></div></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+const TIMELINE = {"meta":{"source_frame":"Timeline (3458764618716122492)","reading_direction":"Единая горизонтальная лента слева направо (основная дорожка y~934, подписи дат y~980-1050, события/локации подняты вверх на выносках y~200-800). Змейки нет: x монотонно растёт со временем.","date_range":"14 Калистрила 4710 — ~20 Нетха 4711 (маркер 'Мы здесь' в конце ленты)","notes":"Летние месяцы 4710 (Саренит, Эрастус, Ародус) на доске пропущены (таймскип между Дезнусом и Ровой 4710). Дата события = ближайшая подпись дня по x к кружку-маркеру; точность +-1-2 дня. Цвета: #4aa22c зелёный = поселение/отдых, #0f607b/#2154a7 синий = точка пути, #1fb3a5 бирюзовые полосы = сегменты с энкаунтерами, #7a7bbb фиолетовый = особый сегмент старта, #ff0066 = маркер 'Мы здесь'."},"events":[{"date":"14 Калистрила 4710","type":"location","title":"Начало","location":"Точка старта кампании","color":"#2154a7","order":1},{"date":"15 Калистрила 4710","type":"location","title":"Сильверхолл","location":"Сильверхолл","color":"#4aa22c","order":2},{"date":"15 Калистрила 4710","type":"event","title":"Миссия от мэра","location":"Сильверхолл","color":null,"order":3},{"date":"23 Калистрила 4710","type":"location","title":"Замок Алдори","location":"Замок Алдори","color":"#4aa22c","order":4},{"date":"23 Калистрила 4710","type":"event","title":"Званый ужин","location":"Замок Алдори","color":null,"order":5},{"date":"23-24 Калистрила 4710","type":"encounter","title":"Нападение Чёрных Слез","location":"В пути к Рестову","color":"green","order":6},{"date":"24 Калистрила 4710","type":"location","title":"Рестов","location":"Рестов","color":"#4aa22c","order":7},{"date":"24 Калистрила 4710","type":"event","title":"Закупки","location":"Рестов","color":"green","order":8},{"date":"25 Калистрила 4710","type":"travel","title":"Переправа Нивакты","location":"Переправа Нивакты","color":"#0f607b","order":9},{"date":"27-28 Калистрила 4710","type":"encounter","title":"Нападение разбойников","location":"Дорога на юг (бирюзовый сегмент)","color":"#1fb3a5","order":10},{"date":"28 Калистрила 4710","type":"encounter","title":"В лес за редисом","location":"Лес у дороги","color":"#1fb3a5","order":11},{"date":"1 Фараста 4710","type":"travel","title":"Возвращение на Пост","location":"Пост Олега","color":"#0f607b","order":12},{"date":"3 Фараста 4710","type":"event","title":"Заказ свитка \"Библиотеки\"","location":"Пост Олега","color":"#0f607b","order":13},{"date":"4 Фараста 4710","type":"travel","title":"На восток за Боккеном","location":null,"color":"#4aa22c","order":14},{"date":"5 Фараста 4710","type":"event","title":"Алхимик","location":"Хижина алхимика (Боккен)","color":"#4aa22c","order":15},{"date":"6 Фараста 4710","type":"event","title":"Тартуччио","location":null,"color":"#4aa22c","order":16},{"date":"7 Фараста 4710","type":"travel","title":"Исследуем","location":null,"color":"#0f607b","order":17},{"date":"8 Фараста 4710","type":"event","title":"Пошли на юг, нашли руду","location":null,"color":"#0f607b","order":18},{"date":"9 Фараста 4710","type":"encounter","title":"Феи-Клещи-Кобольды!","location":null,"color":"#0f607b","order":19},{"date":"10 Фараста 4710","type":"travel","title":"В шахту к кобольдам","location":"Шахта кобольдов","color":"#0f607b","order":20},{"date":"12 Фараста 4710","type":"encounter","title":"Зомби в реке","location":"Река","color":"#0f607b","order":21},{"date":"14 Фараста 4710","type":"location","title":"Пост Олега","location":"Пост Олега","color":"#0f607b","order":22},{"date":"15 Фараста 4710","type":"location","title":"Алтарь Дезны","location":"Алтарь Дезны","color":"#0f607b","order":23},{"date":"16 Фараста 4710","type":"encounter","title":"Ловушки в лесу","location":"Лес","color":"#0f607b","order":24},{"date":"18 Фараста 4710","type":"travel","title":"Болота","location":"Болота","color":"#0f607b","order":25},{"date":"19-20 Фараста 4710","type":"event","title":"Технолига","location":null,"color":"#0f607b","order":26},{"date":"20-21 Фараста 4710","type":"location","title":"Лагерь Технолиги","location":"Лагерь Технолиги","color":"#0f607b","order":27},{"date":"21 Фараста 4710","type":"travel","title":"Опять в леса","location":null,"color":"#0f607b","order":28},{"date":"23 Фараста 4710","type":"location","title":"Истоки Смрадки","location":"Истоки реки Смрадки","color":"#0f607b","order":29},{"date":"25 Фараста 4710","type":"location","title":"Храм Эрастила","location":"Храм Эрастила","color":"#0f607b","order":30},{"date":"26 Фараста 4710","type":"event","title":"Рыбак","location":null,"color":"#0f607b","order":31},{"date":"28 Фараста 4710","type":"encounter","title":"Бандиты!","location":null,"color":"#0f607b","order":32},{"date":"29-30 Фараста 4710","type":"encounter","title":"Феи!","location":null,"color":"#0f607b","order":33},{"date":"31 Фараста 4710","type":"location","title":"Пост Олега","location":"Пост Олега","color":"#0f607b","order":34},{"date":"3 Гозрана 4710","type":"encounter","title":"Мост, гарпии","location":"Мост","color":"#0f607b","order":35},{"date":"5 Гозрана 4710","type":"encounter","title":"Лес, Потрошила","location":"Лес","color":"#0f607b","order":36},{"date":"8 Гозрана 4710","type":"encounter","title":"Смрадка, боггарты","location":"Река Смрадка","color":"#0f607b","order":37},{"date":"11 Гозрана 4710","type":"encounter","title":"Татцельвурмы","location":null,"color":"#4aa22c","order":38},{"date":"13 Гозрана 4710","type":"event","title":"Яма с собакой","location":null,"color":"#4aa22c","order":39},{"date":"15 Гозрана 4710","type":"location","title":"Клыковица","location":"Клыковица","color":"#4aa22c","order":40},{"date":"20 Гозрана 4710","type":"event","title":"Еда кончается","location":null,"color":"#4aa22c","order":41},{"date":"21 Гозрана 4710","type":"location","title":"Боккен","location":"У Боккена","color":"#4aa22c","order":42},{"date":"24 Гозрана 4710","type":"location","title":"Форт Рогача","location":"Форт Рогача","color":"#4aa22c","order":43},{"date":"29 Гозрана 4710","type":"location","title":"Пост Олега","location":"Пост Олега","color":"#4aa22c","order":44},{"date":"5 Дезнуса 4710","type":"location","title":"Рестов","location":"Рестов","color":"#4aa22c","order":45},{"date":"9 Дезнуса 4710","type":"event","title":"Пир в Рестове","location":"Рестов","color":"#4aa22c","order":46},{"date":"24 Дезнуса 4710","type":"encounter","title":"Зомби в столице","location":"Столица королевства","color":"#4aa22c","order":47},{"date":"24-26 Дезнуса 4710","type":"event","title":"Бабуля Белдам","location":null,"color":"#4aa22c","order":48},{"date":"29 Дезнуса 4710","type":"event","title":"Друид","location":null,"color":"#4aa22c","order":49},{"date":"2 Ровы 4710","type":"event","title":"Возвратили кольцо","location":null,"color":"#4aa22c","order":50},{"date":"16 Ровы 4710","type":"event","title":"Холмогорье, грибы","location":"Холмогорье","color":"#4aa22c","order":51},{"date":"1 Ламашана 4710","type":"event","title":"Проблемы с волками","location":null,"color":"#4aa22c","order":52},{"date":"12 Ламашана 4710","type":"event","title":"Излечение от вервульфства","location":null,"color":"#4aa22c","order":53},{"date":"18 Ламашана 4710","type":"event","title":"Западный лес, лесорубы, феи","location":"Западный лес","color":"#4aa22c","order":54},{"date":"1 Нетха 4710","type":"event","title":"Гробница и Джейтал","location":"Гробница","color":"#4aa22c","order":55},{"date":"12 Нетха 4710","type":"event","title":"Северный лес, Первый Мир и Тан","location":"Северный лес","color":"#4aa22c","order":56},{"date":"14 Нетха 4710","type":"event","title":"Шахты и алкоголь","location":"Шахты","color":"#4aa22c","order":57},{"date":"1 Кутоны 4710","type":"travel","title":"Начало исследований на востоке","location":"Восток королевства","color":"#4aa22c","order":58},{"date":"4 Кутоны 4710","type":"event","title":"Мартин переезжает","location":null,"color":"#4aa22c","order":59},{"date":"6 Кутоны 4710","type":"event","title":"На запад, мертвый единорог и гоблины","location":"Запад королевства","color":"#4aa22c","order":60},{"date":"9 Кутоны 4710","type":"location","title":"Шахта жадных дворфов","location":"Шахта жадных дворфов","color":"#4aa22c","order":61},{"date":"13 Кутоны 4710","type":"event","title":"Попытка дальше на запад, Эйрик ушел","location":"Запад","color":"#4aa22c","order":62},{"date":"1 Абадиуса 4711","type":"event","title":"Кобольды принесли весть","location":null,"color":"#4aa22c","order":63},{"date":"1-7 Абадиуса 4711","type":"event","title":"Налаживание горизонтальных связей","location":"Столица","color":"#4aa22c","order":64},{"date":"8 Абадиуса 4711","type":"travel","title":"Вперед к исследованиям","location":null,"color":"#4aa22c","order":65},{"date":"14 Абадиуса 4711","type":"encounter","title":"Виверны","location":null,"color":"#4aa22c","order":66},{"date":"17 Абадиуса 4711","type":"location","title":"Варнхольд","location":"Варнхольд","color":"#4aa22c","order":67},{"date":"22 Абадиуса 4711","type":"event","title":"Срочное дело у кобольдов","location":"Кобольды","color":"#4aa22c","order":68},{"date":"6 Калистрила 4711","type":"encounter","title":"Пикси, варги и тролли","location":null,"color":"#4aa22c","order":69},{"date":"12 Калистрила 4711","type":"event","title":"Кроу болен","location":null,"color":"#4aa22c","order":70},{"date":"16 Калистрила 4711","type":"location","title":"Эльфийский форт","location":"Эльфийский форт","color":"#4aa22c","order":71},{"date":"25 Калистрила 4711","type":"event","title":"Опоздали на гос дела","location":"Столица","color":"#4aa22c","order":72},{"date":"1 Фараста 4711","type":"event","title":"Делали гос дела","location":"Столица","color":"#4aa22c","order":73},{"date":"2 Фараста 4711","type":"location","title":"На Острове Ужаса","location":"Остров Ужаса","color":"#4aa22c","order":74},{"date":"18 Фараста 4711","type":"location","title":"Ящерный остров","location":"Ящерный остров","color":"#4aa22c","order":75},{"date":"29 Фараста 4711","type":"event","title":"Городские дела","location":"Столица","color":"#4aa22c","order":76},{"date":"1 Гозрана 4711","type":"event","title":"Кобольды разведчики","location":null,"color":"#4aa22c","order":77},{"date":"12 Гозрана 4711","type":"location","title":"Озера на востоке","location":"Озера на востоке","color":"#4aa22c","order":78},{"date":"22 Гозрана 4711","type":"travel","title":"К развалинам","location":"Развалины","color":"#4aa22c","order":79},{"date":"1-10 Дезнуса 4711","type":"encounter","title":"Баргесты и гоблины","location":null,"color":"#4aa22c","order":80},{"date":"17 Дезнуса 4711","type":"event","title":"Григорий из Гальта","location":null,"color":"#4aa22c","order":81},{"date":"27 Дезнуса 4711","type":"event","title":"Григорий повержен","location":null,"color":"#4aa22c","order":82},{"date":"14 Саренита 4711","type":"event","title":"Поражение от армии троллей","location":null,"color":"#4aa22c","order":83},{"date":"21 Саренита 4711","type":"travel","title":"На варгов","location":null,"color":"#4aa22c","order":84},{"date":"1 Эрастуса 4711","type":"travel","title":"Отправились в руины с залами стихий","location":"Руины с залами стихий","color":"#4aa22c","order":85},{"date":"17 Эрастуса 4711","type":"event","title":"Вернулись в королевство","location":"Королевство","color":"#4aa22c","order":86},{"date":"20 Эрастуса 4711","type":"location","title":"Равнины крючковатых топей","location":"Равнины крючковатых топей","color":"#4aa22c","order":87},{"date":"7 Ародуса 4711","type":"event","title":"Победа над армией троллей! Осада замка Харгулки","location":"Замок Харгулки","color":"#4aa22c","order":88},{"date":"14 Ародуса 4711","type":"event","title":"Прибытие в столицу, столица в огне!","location":"Столица","color":"#4aa22c","order":89},{"date":"1 Ровы 4711","type":"event","title":"Охота на медвесыча","location":null,"color":"#4aa22c","order":90},{"date":"1 Ламашана 4711","type":"event","title":"Рыбалка и встреча с охотниками","location":null,"color":"#4aa22c","order":91},{"date":"16 Ламашана 4711","type":"event","title":"Пир для Экундайо","location":null,"color":"#4aa22c","order":92},{"date":"18 Ламашана 4711","type":"event","title":"Месть Экундайо великанам и дрейку","location":null,"color":"#4aa22c","order":93},{"date":"25 Ламашана 4711","type":"encounter","title":"Засада на культистов","location":null,"color":"#4aa22c","order":94},{"date":"20 Нетха 4711","type":"travel","title":"Возврат в столицу","location":"Столица","color":"#4aa22c","order":95},{"date":"~20+ Нетха 4711","type":"event","title":"Мы здесь (текущая позиция кампании на доске)","location":null,"color":"#ff0066","order":96}]};
+const ENRICH = {"sessions":[{"n":1,"date":"2025-01-29","slug":"session-01-reconstructed","chapter_title":"The start of a tale (Начало пути)","summary":"Старт кампании — точка «Начало» на Miro-таймлайне, 14 Калистрила 4710. Герои приглашены Джаманди Алдори в замок Алдори на званый ужин — клич («Hunger Games») на отжимание Украденных Земель.","npcs_met":["Джаманди Алдори","Мэр Сильверхолла (имя неизвестно)"],"key_events":["Старт кампании — точка «Начало» на Miro-таймлайне, 14 Калистрила 4710.","Герои приглашены Джаманди Алдори в замок Алдори на званый ужин — клич («Hunger Games») на отжимание Украденных Земель.","15 Калистрила герои прибыли в Сильверхолл и получили миссию от мэра (детали миссии неизвестны)."],"locations":["Сильверхолл","Рестов"],"rec":true},{"n":2,"date":"2025-02-05","slug":"session-02-reconstructed","chapter_title":"A night in the forest (Ночь в лесу)","summary":"Стразора покусал ликантроп у Сильверхолла (DM correction в Discord — «важная деталь для будущего»). Дорожная сессия: путь от Сильверхолла к замку Алдори с ночёвкой в лесу (по названию сессии «A night in the forest» и датам Miro-таймлайна).","npcs_met":[],"key_events":["Стразора покусал ликантроп у Сильверхолла (DM correction в Discord — «важная деталь для будущего»).","Дорожная сессия: путь от Сильверхолла к замку Алдори с ночёвкой в лесу (по названию сессии «A night in the forest» и датам Miro-таймлайна)."],"locations":["Дорога Сильверхолл → Замок Алдори"],"rec":true},{"n":3,"date":"2025-02-12","slug":"session-03-reconstructed","chapter_title":"A way home? (Дорога домой?)","summary":"Прибытие героев в замок Алдори Джаманди, 23 Калистрила 4710. Дипломатия с гостями замка — будущими правителями земель: конкуренты клича (Железные Призраки, барон Дрелев, Маегарн Варн) и прочие гости.","npcs_met":["Джаманди Алдори","Майгар Варн (Маегарн)","Барон Дрелев"],"key_events":["Прибытие героев в замок Алдори Джаманди, 23 Калистрила 4710.","Дипломатия с гостями замка — будущими правителями земель: конкуренты клича (Железные Призраки, барон Дрелев, Маегарн Варн) и прочие гости."],"locations":["Замок Алдори (Джаманди)"],"rec":true},{"n":4,"date":"2025-02-19","slug":"session-04-reconstructed","chapter_title":"Destruction all around us (Разрушение вокруг нас)","summary":"Ночной налёт синдиката «Чёрные Слёзы» на поместье Алдори: дракон и синяя великаша-предводительница разносят замок, в тени пожара действуют ассасины. Герои спасают: некромантку от огра; прислугу от дракона; Амири и Валери в подвале (за изувеченным великаном, меч Амири при нём); встречают Харрима в горящем западном крыле; спасают эльфийку-крестьянку с косой от ассасино","npcs_met":["Джаманди Алдори","Синяя великаша-предводительница","Дракон Чёрных Слёз","Некромантка (имя неизвестно)","Эльфийка-крестьянка с косой"],"key_events":["Ночной налёт синдиката «Чёрные Слёзы» на поместье Алдори: дракон и синяя великаша-предводительница разносят замок, в тени пожара действуют ассасины.","Герои спасают: некромантку от огра; прислугу от дракона; Амири и Валери в подвале (за изувеченным великаном, меч Амири при нём); встречают Харрима в горящем западном крыле; спасают эльфийку-крестьянку с косой от ассасино","Джаманди Алдори отбивается; дракон подхватывает великашу-предводительницу и улетает.","События этой сессии соответствуют стансу Первого Испытания (Ten Trials, Акло): «Ещё не ставшие герои на пире собрались… В тени пожар бушует… И в хаосе короны королевство зародили»."],"locations":["Замок Алдори (Джаманди)"],"rec":true},{"n":5,"date":"2025-02-26","slug":"session-05-reconstructed","chapter_title":"New dawn (Новый рассвет — утро после нападения)","summary":"Джаманди распределяет задачи: героям достаётся Зелёный Пояс, первая база — торговый пост Олега. Предательство Тартуччио: он уводит за собой Амири, Харрима и Джейтал.","npcs_met":["Тартуччио","Майгар Варн","Солдат с урной"],"key_events":["Джаманди распределяет задачи: героям достаётся Зелёный Пояс, первая база — торговый пост Олега.","Предательство Тартуччио: он уводит за собой Амири, Харрима и Джейтал.","На выходе герои встречают Маегарна Варна (его караван тоже атакован) и едут с ним до Переправы Нивакты.","Утро после атаки: герои помогают восстанавливать замок Алдори.","В деревне у Переправы: церковь Фаразмы, основанная пришлой жрицей; в таверне — солдат с урной (брат умер, обижен на власть)."],"locations":["Переправа Нивакты","Рестов"],"rec":true},{"n":6,"date":"2025-03-05","slug":"session-06-reconstructed","chapter_title":"End of a long road (Конец долгой дороги — путь к посту Олега)","summary":"Прибытие на пост Олега. Сон Кроу №1: фигуристая женщина-дух земель просит остановить Рогача и друида.","npcs_met":["Олег","Светлана","Хаппс","Женщина-дух земель"],"key_events":["Прибытие на пост Олега.","Сон Кроу №1: фигуристая женщина-дух земель просит остановить Рогача и друида.","Поле зомби: стоило обратиться к «крестьянам» — те исчезли, из земли полезли зомби.","Квесты от хозяев поста: Олег — голова Тацельвурма; Светлана — лунный редис и обручальное кольцо.","Первая ночь пути: нападение волков (мясо съели)."],"locations":["Торговый пост Олега","Река Шумная и Водопады","Поле зомби"],"rec":true},{"n":7,"date":"2025-03-12","slug":"session-07-reconstructed","chapter_title":"Entering the new world (Вход в новый мир — имена лошадям, кобольды)","summary":"Найдены кобольды, объевшиеся лунным редисом. Визит к Боккену: Тартуччио уже скупил все зелья и ушёл на юг.","npcs_met":["Боккен","Джод","Соломон","Курмиль (упомянут)"],"key_events":["Найдены кобольды, объевшиеся лунным редисом.","Визит к Боккену: Тартуччио уже скупил все зелья и ушёл на юг.","Герои дают имена лошадям: Кроу — Буцефал, Стразор — Маркиз, Каэлум — Ту Кет Селхан («один носок»).","Встречи в пути: Джод (ищет храм Эрастила в Скрюченных топях) и Соломон (воин-одиночка против бандитов).","По Miro-таймлайну 3 Фараста на посту Олега заказан свиток «Библиотеки» (деталей во вторичных источниках нет)."],"locations":["Хижина алхимика Боккена"],"rec":true},{"n":8,"date":"2025-03-19","slug":"session-08-reconstructed","chapter_title":"Looking for a path (Погоня за Тартуччио)","summary":"Тартуччио ушёл в подземный склеп; при появлении героев убегает, оставив наёмников и Амири прикрывать. В гробнице найден станс Первого Испытания (Акло) — текст, описывающий события пира у Алдори (S4).","npcs_met":["Тартуччио"],"key_events":["Тартуччио ушёл в подземный склеп; при появлении героев убегает, оставив наёмников и Амири прикрывать.","В гробнице найден станс Первого Испытания (Акло) — текст, описывающий события пира у Алдори (S4).","На юге чуть не упали в яму с пауком; Кроу падает в другую яму — там труп бандита и карта с пометкой «когтистое дерево» (крест под корнями на холме).","В следующем зале — восставшие скелеты (загадка: как Тартуччио их миновал?).","Амири восстановлена и присоединяется к партии."],"locations":["Подземный склеп (гробница с короной)","Карта «когтистое дерево»"],"rec":true},{"n":9,"date":"2025-03-26","slug":"session-09-reconstructed","chapter_title":"Mite infestation (Гремлины и кобольды)","summary":"Племя кобольдов Пепельная Чешуя: Стразор переименовывает его в «Дружину Беспределья из Кобольдов», выдаёт нашивки и заключает договор о слежке. Зачистка гигантского дерева гремлинов: бой с гремлинами наверху и внизу (пытали кобольдов), спасение Мик-Мэка, гремлин-наездник на пауке, бой с многоножкой (Кроу теряет сознание от яда), возврат реликвии и сокровища, уни","npcs_met":["Кестен","Мик-Мэк","Тартук","Фалгрим (упомянут)"],"key_events":["Племя кобольдов Пепельная Чешуя: Стразор переименовывает его в «Дружину Беспределья из Кобольдов», выдаёт нашивки и заключает договор о слежке.","Зачистка гигантского дерева гремлинов: бой с гремлинами наверху и внизу (пытали кобольдов), спасение Мик-Мэка, гремлин-наездник на пауке, бой с многоножкой (Кроу теряет сознание от яда), возврат реликвии и сокровища, уни","Сопровождение Мик-Мэка в Рудник Октоп.","Атака разбойников-кандидатов в банду Рогача; пленник доставлен Кестену на пост Олега."],"locations":["Гигантское дерево с тоннелями","Рудник Октоп","Золотая жила"],"rec":true},{"n":10,"date":"2025-04-09","slug":"session-10-reconstructed","chapter_title":"Many paths, but no roads (Карта сокровищ)","summary":"У моста (табличка с ржавым колокольчиком) из воды выходит нежить и просит доказательства смерти Рогача. На севере найдено «когтистое дерево» с карты (S8); выкопан сундук: книга мага, волшебная палочка, улучшенный кинжал, серебряное кольцо.","npcs_met":["Нежить у разрушенного моста (призрак)"],"key_events":["У моста (табличка с ржавым колокольчиком) из воды выходит нежить и просит доказательства смерти Рогача.","На севере найдено «когтистое дерево» с карты (S8); выкопан сундук: книга мага, волшебная палочка, улучшенный кинжал, серебряное кольцо.","На юге — разрушенный мост и сгоревший дом с трупами охотничьих собак.","Возвращение на пост Олега (Miro: 14 Фараста)."],"locations":["Когтистое дерево","Разрушенный мост с колокольчиком"],"rec":true},{"n":11,"date":"2025-04-16","slug":"session-11-reconstructed","chapter_title":"Where did the road take us? (Технолига)","summary":"На юге компас Каэлума показывает «друзья рядом»: найден лагерь — наёмники, 2 технолиговца и пленница-андроид с такими же татуировками, как у Каэлума. При поиске лагеря бандитов на севере найден повреждённый алтарь Дезны — Кроу восстанавливает его.","npcs_met":["Калан","Беглец от «живодёров»"],"key_events":["На юге компас Каэлума показывает «друзья рядом»: найден лагерь — наёмники, 2 технолиговца и пленница-андроид с такими же татуировками, как у Каэлума.","При поиске лагеря бандитов на севере найден повреждённый алтарь Дезны — Кроу восстанавливает его.","К героям прибегает беглец от «живодёров»: главарь — женщина в странной броне из невиданного металла.","Пост Олега защищён наёмниками от атаки (без участия партии)."],"locations":["Алтарь Дезны","Лагерь Технолиги (первый)"],"rec":true},{"n":12,"date":"2025-04-23","slug":"session-12-reconstructed","chapter_title":"Hidden Temple, Crouching Bear (PR1ME-4, Регонгар, Октавия, Тристиан)","summary":"Через портал — штурм основного лагеря Технолиги (тренога, 3 турели, охрана). Компас Каэлума указывает на руку PR1ME-4 — там кибертатуировка.","npcs_met":["PR1ME-4","Калан","Трёхпалый (упомянут)"],"key_events":["Через портал — штурм основного лагеря Технолиги (тренога, 3 турели, охрана).","Компас Каэлума указывает на руку PR1ME-4 — там кибертатуировка.","Допрос Калан: лейтенант «Трёхпалый» — в ЮВ Нумерии; один из баронов дома Рогарвия сотрудничает с Нумерией (работорговля).","У заброшенного храма Эрастила — встреча с Тристианом (будто знал, что придут).","Поход к истоку Смрадки: зловонное озеро, две плотоядные лягушки (не трогали)."],"locations":["Основной лагерь Технолиги","Истоки реки Смрадки","Заброшенный храм Эрастила"],"rec":true},{"n":13,"date":"2025-05-08","slug":"session-13-reconstructed","chapter_title":"One less trouble (Тристиан + Крессель + феи)","summary":"Завершён тяжёлый бой с медведем-аберрацией (Тристиан — клирик-целитель). Найден лагерь бандитов на платформах в деревьях; предводительница Крессель взята в плен.","npcs_met":["Крессель","Фея-дракончик","Фея-стрекоза","Рыбак, на которого «напала вода»"],"key_events":["Завершён тяжёлый бой с медведем-аберрацией (Тристиан — клирик-целитель).","Найден лагерь бандитов на платформах в деревьях; предводительница Крессель взята в плен.","Феи-пакостники (дракончик + фея-стрекоза, невидимость): партия откупается; феи приглашают героев в свой мир, «когда проход откроется», и говорят, что «вечные», возможно, знают про истинные имена.","Меч Амири ожил и полечился сам — подтверждена сущность в мече."],"locations":["Лагерь бандитов на платформах","Клыководье (упомянуто)"],"rec":true},{"n":14,"date":"2025-05-14","slug":"session-14-reconstructed","chapter_title":"Bandit Fort (Потрошила + клыковица + подход к форту Рогача)","summary":"Зона прорыва плана земли; логово Потрошилы — чудовище размером с замок пробуждается, партия чудом сбегает без боя (Miro: 5 Гозрана). Подход к форту Рогача: форт на возвышении 30 футов, найдена скрытая тропа к заднему периметру.","npcs_met":["Боггарт с питомцем"],"key_events":["Зона прорыва плана земли; логово Потрошилы — чудовище размером с замок пробуждается, партия чудом сбегает без боя (Miro: 5 Гозрана).","Подход к форту Рогача: форт на возвышении 30 футов, найдена скрытая тропа к заднему периметру.","Тристиан отказывается вырезать татуировку PR1ME-4 (нужна клиника).","Логово Тацельвурмов: добыты головы для квеста Олега.","Заросли клыковицы: нападают пауки-рои; растение добыто.","Разрушенный древний мост (можно восстановить позже); гнёзда гарпий пусты — ждали день впустую (Miro: «Мост, гарпии», 3 Гозрана)."],"locations":["Зона магического прорыва плана земли","Логово Потрошилы","Логово Тацельвурмов","Форт Рогача"],"rec":true},{"n":15,"date":"2025-05-21","slug":"session-15-reconstructed","chapter_title":"The Lord is Dead. Long live the Lord (Рогач убит)","summary":"Ожесточённая битва с бандитами в тылу форта. Рогач убит.","npcs_met":["Рогач (Stag Lord)","Перебежчик (Акирос)","Человек-друид из подвала форта"],"key_events":["Ожесточённая битва с бандитами в тылу форта.","Рогач убит.","У форта встречен Нок-Нок; отправлен поджечь пристань как отвлекающий манёвр.","Проникновение через старый могильник на вершину холма и люк под землёй."],"locations":["Форт Рогача"],"rec":true},{"n":16,"date":"2025-06-04","slug":"session-16-reconstructed","chapter_title":"The noble party (Акирос + хартия на королевство)","summary":"Повторная охота на Потрошилу — подготовленная партия побеждает. Через неделю — Рестов: герои получают хартию на основание королевства (5 Дезнуса 4710).","npcs_met":["Акирос","Женщина-дух земель","Призрак у моста"],"key_events":["Повторная охота на Потрошилу — подготовленная партия побеждает.","Через неделю — Рестов: герои получают хартию на основание королевства (5 Дезнуса 4710).","Перебежчик представился: Акирос, бывший жрец Эрастила, лишённый сил за убийство любовницы и её мужа.","У костра Амири рассказывает прошлое: изгнание из племени за убийство соплеменников, меч с тела ледяного великана.","Сон Кроу №2: женщина-дух земель благодарит за смерть Рогача; связь укрепляется.","Возвращение к мосту: тело Рогача отдано нежити; призрак обретает покой и отдаёт рунку."],"locations":["Рестов","Логово Потрошилы"],"rec":true},{"n":17,"date":"2025-06-11","slug":"session-17-reconstructed","chapter_title":"Week of deliberation (Неделя переговоров с благородными домами)","summary":"Пир в Рестове (9 Дезнуса 4710): герои налаживают связи с благородными домами перед основанием королевства. Неделя переговоров по расписанию встреч в поисках «замечательной сделки».","npcs_met":["Клод Орловский","Жрица Шелин в Рестове","Жена барона Дрелева"],"key_events":["Пир в Рестове (9 Дезнуса 4710): герои налаживают связи с благородными домами перед основанием королевства.","Неделя переговоров по расписанию встреч в поисках «замечательной сделки».","Проработано 11 сделок (Miro Negotiations Table): контрагенты — дом Орловский, дом Гаррес, фракция Медведа, а также церкви Фаразмы, Абадара, Эрастила, Горума, Кейдена Кайлина и Шелин."],"locations":["Рестов"],"rec":true},{"n":18,"date":"2025-06-18","slug":"session-18-reconstructed","chapter_title":"The founding (Основание — зомби на кладбище)","summary":"Веха Kingdom Timeline: «Основание Оплота», Дезнус 4710 — основание столицы королевства (сопоставлено с названием сессии «The founding»). Возвращение во владения — беспорядок: зомби с кладбища мешают рабочим (Miro: «Зомби в столице», 24 Дезнуса).","npcs_met":["Налуска Белая","Бабуля Белдам","Курмиль (злой друид, брат Боккена)"],"key_events":["Веха Kingdom Timeline: «Основание Оплота», Дезнус 4710 — основание столицы королевства (сопоставлено с названием сессии «The founding»).","Возвращение во владения — беспорядок: зомби с кладбища мешают рабочим (Miro: «Зомби в столице», 24 Дезнуса).","Встреча с братом Боккена — злым друидом (Курмилем).","На окраинах баронства фейская старуха бабуля Белдам даёт квест на грибочки (Miro: 24-26 Дезнуса)."],"locations":["Столица королевства (Оплот)"],"rec":true},{"n":19,"date":"2025-06-25","slug":"session-19-reconstructed","chapter_title":"Kingdom come (Тартук = Тартуччио!)","summary":"Вехи Kingdom Timeline за Эрастус 4710, попадающие в таймскип: 2-й уровень королевства и основание Татцельфорда. Поход в пещеру кобольдов, истребление племени («первый геноцид»).","npcs_met":["Тартук (= Тартуччио)","Мик-Мэк","Прежний вождь кобольдов"],"key_events":["Вехи Kingdom Timeline за Эрастус 4710, попадающие в таймскип: 2-й уровень королевства и основание Татцельфорда.","Поход в пещеру кобольдов, истребление племени («первый геноцид»).","Станс Второго Испытания найден «у Тартука» (по Miro Ten Trials); привязка к моменту его гибели в этой сессии — оценочная.","Таймскип: 2 месяца королевских указов (управление королевством).","Расследование похищений жителей — виновны кобольды."],"locations":["Пещера кобольдов Тартука","Татцельфорд"],"rec":true},{"n":20,"date":"2025-07-02","slug":"session-20-reconstructed","chapter_title":"Pains of ruling (Визитёры + грибы)","summary":"Гигантский мутировавший гриб глотает Кроу и Харрима и начинает переваривать заживо — их едва вытаскивают (Холмогорье, квест грибов Белдам). Расширение королевства: территория до рудника, дорога, пивоварня.","npcs_met":["Рыбак (визитёр)","Аристократ (визитёр)","Дама в плаще (визитёр)"],"key_events":["Гигантский мутировавший гриб глотает Кроу и Харрима и начинает переваривать заживо — их едва вытаскивают (Холмогорье, квест грибов Белдам).","Расширение королевства: территория до рудника, дорога, пивоварня.","Три визитёра в столице: рыбак (гигантская черепаха, награда — рунный камень), аристократ (пропавший в Варнхольде брат, 75 золотых), дама в плаще (предложение построить академию — ушла без подробностей).","Визит к Джубилосту (гном-картограф): соглашается основаться в столице и возможно участвовать в походах.","Светлане возвращено обручальное кольцо (Miro: 2 Ровы); Олег даёт 50 золотых товара.","Гигантская черепаха убита."],"locations":["Холмогорье","Нетронутый форт на чужой земле"],"rec":true},{"n":21,"date":"2025-07-09","slug":"session-21-reconstructed","chapter_title":"Months go by (Волколаки)","summary":"Двое жителей королевства убиты — работа волколаков (Miro: «Проблемы с волками», 1 Ламашана). Засада с Амири как приманкой: свирепые волки + волколак.","npcs_met":["Кундал"],"key_events":["Двое жителей королевства убиты — работа волколаков (Miro: «Проблемы с волками», 1 Ламашана).","Засада с Амири как приманкой: свирепые волки + волколак.","Жрецы в Рестове за ~500 золотых излечивают пострадавших, включая самого волколака (Miro: «Излечение от вервульфства», 12 Ламашана).","Открытая загадка DM (стикер «на после кампании»): почему Кундал был волком полторы недели после обращения в полнолуние?"],"locations":["Рестов"],"rec":true},{"n":22,"date":"2025-07-23","slug":"session-22-reconstructed","chapter_title":"Kingdom grows? (Терессия, палка Стразора, начало fae-арки)","summary":"Осмотр вещей пропавшего постояльца: волколак работал с Эйриком, использующим животных для боёв на арене. Визит к дриаде Терессии: отдала волшебные перья и раскрыла, что палка Стразора — часть феи (спрашивать в лесах).","npcs_met":["Терессия","Эйрик","Боггарт","Фея-дракончик"],"key_events":["Осмотр вещей пропавшего постояльца: волколак работал с Эйриком, использующим животных для боёв на арене.","Визит к дриаде Терессии: отдала волшебные перья и раскрыла, что палка Стразора — часть феи (спрашивать в лесах).","Фея-дракончик повторно приглашает героев в гости в мир фей.","Лесорубы Западного леса попали под фею; заключено соглашение на восстановление деревьев.","Расшифрована карта злого друида (брата Боккена): ведёт к захоронению вождя келлидов, увлекавшегося чёрной магией.","Дипломатия с боггартом на болоте: «абыапо крякря кваква» = «идите нах»."],"locations":["Западный лес","Захоронение вождя келлидов (упомянуто)"],"rec":true},{"n":23,"date":"2025-07-30","slug":"session-23-reconstructed","chapter_title":"New treasures? (Гробница келлидов + Джейтал + проклятая коса)","summary":"У входа в гробницу вождя келлидов партия встречает Джейтал — та направлялась туда же. Зачистка гробницы: полчища летучих мышей, ловушки с негативной энергией (Джейтал невосприимчива — доказала пользу команде), битва с нежитью.","npcs_met":[],"key_events":["У входа в гробницу вождя келлидов партия встречает Джейтал — та направлялась туда же.","Зачистка гробницы: полчища летучих мышей, ловушки с негативной энергией (Джейтал невосприимчива — доказала пользу команде), битва с нежитью.","Найдена проклятая коса (пробуждается убийствами).","Вероятно, в конце сессии партия приняла приглашение фей и попала в Первый Мир на Пир Тана: previously_on сессии 24 утверждает, что Каэлум встретил одного из пленённых смертных (сына Вола) «на прошлой сессии».","Веха Kingdom Timeline: 3-й уровень королевства (Нетх 4710) — приходится примерно на игровое время этой сессии."],"locations":["Гробница вождя келлидов"],"rec":true},{"n":24,"date":"2025-08-06","slug":"session-24_pir-fae","chapter_title":"Fae? Fae :fear (Пир у Тана)","summary":"Летний Шторм заключает пари с Таном: если он сможет развлечь Тана через героев — те возвращаются домой; если провал — кролик становится собственностью Тана. Стразор разговаривает с Архивисткой.","npcs_met":["Тан","Клитус","Летний Шторм","Pixie Archivist","Древень (Капитан Стражи)","Дриада Клипхатис","Врукхорн Дракси","Семья Вола","Абертир","Шика","Превращённая в лампу фея"],"key_events":["Летний Шторм заключает пари с Таном: если он сможет развлечь Тана через героев — те возвращаются домой; если провал — кролик становится собственностью Тана.","Стразор разговаривает с Архивисткой.","Кроу платит дриаде Клипхатис историей о мистической чуме его деревни.","Тан устраивает турнир дуэлей — атаки не наносят урона, важно зрелище.","Летний Шторм завершает магию: вкладывает остаток своей силы в лист-приглашение.","Перед побегом партия выбирает между Infiltration (тихо) и Chase (быстро и громко)."],"locations":["Пир Тана (Пир Фей)","Грань завтрашнего дня","Узкий проход со щитом"]},{"n":25,"date":"2025-08-20","slug":"session-25_escape-from-fae","chapter_title":"Escape from FAE! (Побег из Первого Мира)","summary":"Каэлум использует Ventriloquist Ring: поворачивает кольцо и громко кричит «бегите!» — голос проецируется в толпу фей за 60 футов. Chase mechanics: герои прорываются через 5 препятствий — толпа фей, элитная стража, живой лес, лиственный шторм, и финальный бой с гончими.","npcs_met":["Тан","Летний Шторм","Гончие Тана (столовые псы)","Стражи Тана (растительные элитные стражники)","Отшельник-фермер с саванны","Бригадир шахты","Шахтёр-собеседник","Искатель Истины","Клитус"],"key_events":["Каэлум использует Ventriloquist Ring: поворачивает кольцо и громко кричит «бегите!» — голос проецируется в толпу фей за 60 футов.","Chase mechanics: герои прорываются через 5 препятствий — толпа фей, элитная стража, живой лес, лиственный шторм, и финальный бой с гончими.","У Грани Будущего из земли выпрыгивают 4 гончих (превращённые столы Тана).","Тан говорит «мы считаем, споры вы выиграли честно и впечатляюще.","Джейтал появляется из тьмы в столице вечером.","После всех событий к героям приходит человек — пилигрим, называющий себя Искателем Истины (имя оставил при принятии пилигримства)."],"locations":["Пир Тана (Пир Фей)","Грань Будущего","Лес Первого Мира","Лагерь героев (опушка леса)","Золотая шахта Светоча","50-футовый водопад","Саванна (hex с фермой отшельника)","Разрушенный храм Эрастила со статуей"]},{"n":26,"date":"2025-08-27","slug":"session-26_no-rest-for-the-kings","chapter_title":"No rest for the kings! (Тролльи псы, дварфийская шахта, мёртвый единорог)","summary":"Кроу рассказывает партии: к нему вечером в столице приходила Джейтал. Партия наткнулась на поляну с трупом единорога рядом с гнилым 'болотом'.","npcs_met":["Элонакс","Тролльи псы","Орда дварфийской нежити","Аурос Рача","Мёртвый единорог","Группа гоблинов с юга","Frighmoth / Фрагемот","Болотные воины","Терессия (дриада)","Фалькос (Палькос)","Эрик","Боккен (алхимик)"],"key_events":["Кроу рассказывает партии: к нему вечером в столице приходила Джейтал.","Партия наткнулась на поляну с трупом единорога рядом с гнилым 'болотом'.","На центральной платформе с рельсо-переключателем (дварфийский поворотный механизм) партию окружили два элонакса (фейские коты-рыси).","Бой с ордой нежити и боссом Аурос Рача.","После боя партия разбила лагерь.","По дороге партия увидела сражение: Frighmoth (CR-15 болотный гигант-аберрация) пожирает группу из 6 болотных воинов-жуков, уже сожрал двух."],"locations":["Дварфийская шахта холодного железа","Поляна с трупом единорога","Лагерь Эрика","Крючковатые Топи","Рощица Терессии","Палмогорье"]},{"n":27,"date":"2025-09-03","slug":"session-27_half-a-year-passed","chapter_title":"Half a year passed (Управление королевством и дипломатические стратегии)","summary":"Полный ход королевства Светоч — достигнут 3-й уровень. Партия (Стразор+Кроу+Каэлум+Нок-Нок+Тристиан) отправляется на восток исследовать «Камляндию» (видимо равнины восточнее королевства).","npcs_met":["Майгар Варн","Ульфенский следопыт (имя не названо)","Племя варгов (вожак — Быстрая Воя Северного Ветра)","Две виверны","Вождь углекожих кобольдов (имя не названо)","Лорд Харгулка","Брат пропавшего аристократа (сессия 20)","Гигантская птица над Когтём","Ировети","Стражи перевала Варнхольда"],"key_events":["Полный ход королевства Светоч — достигнут 3-й уровень.","Партия (Стразор+Кроу+Каэлум+Нок-Нок+Тристиан) отправляется на восток исследовать «Камляндию» (видимо равнины восточнее королевства).","В южном направлении (озеро) партия исследует руины ирригации.","Партия пересекает Соджанный перевал и приезжает в Варнхольд.","В пещере кобольдов вождь принимает партию на свежем «троне».","Событие королевства: монстры нападают на жителей в лесу."],"locations":["Светоч (столица)","Тацельфорд","Шахта Кобольдов (Рудник Октоп)","Территория варгов (равнины восточнее реки)","Заброшенный карьер (40 лет)","Заброшенная ирригационная система","Варнхольд","Соджанный перевал"]},{"n":28,"date":"2025-09-24","slug":"session-28_allies-or-enemies","chapter_title":"Allies or enemies? (Дипломатия в Кобольтских землях и засада в лесу)","summary":"Продолжение клиффхенгера 27. Очередной полный ход королевства Светоч, приближается 4-й уровень.","npcs_met":["Лорд Харгулка","Вождь углекожих кобольдов","Страж Харгулки","Рейнджер-охотник на троллей (имя не названо)","Пёс рейнджера","Прекрасная дама из библиотеки","Гоблины Шипоклубки (Клубок Шипов)","Знаменитый бандит-грабитель","Варги с пикси-наездниками","Тролль-псы (вторая встреча)","Три тролля (преследовали рейнджера)","Дом Гаррес (Брывой)"],"key_events":["Продолжение клиффхенгера 27.","Очередной полный ход королевства Светоч, приближается 4-й уровень.","Нок-Нок приходит в столицу с 'ужасными новостями': его друг друга друга (через 'разговорчивую ворону') узнал, что вновь видели гоблинов Шипоклубки в окрестностях — племя, которое он считал истреблённым.","На следующий день в юго-западных Нарлмаршах партия исследует — навстречу подходят бесшумно два варга.","После боя пикси на партию выбегает паршивая собака — лает, поворачивается, идёт за неё.","После ухода Харгулки Стразор уточняет: что в бывшей шахте можно добыть?"],"locations":["Шахта Кобольдов (бывшая серебряная шахта)","Светоч (столица)","Тацельфорд","Восточная территория племени Быстрой Войи (упомянута)","Юго-западные Нарлмарши","Каменное укрытие рейнджера в лесу","Гора Коготь","Древние магические руины Наталдорских завоеваний"]},{"n":29,"date":"2025-10-01","slug":"session-29","chapter_title":"Эльфийская крепость и хороводы Финн де Ладры","summary":"Собака Экундайо лаем привела партию к раненому хозяину после боя с троллями Граглберта. Кроу прочитал окровавленный лист — Третий Трайл.","npcs_met":["Собака Экундайо","Граглберт","Квиклинг","Окровавленная дама в верхней комнате","Тенеброд","Двое наёмников из Мивона","Связанный преступник из Мивона","Три тролля-разбойника","Стая троллей-псов с невидимыми пикси","Варги с невидимыми пикси-наездниками","Сворм крыс в северо-восточной башне"],"key_events":["Собака Экундайо лаем привела партию к раненому хозяину после боя с троллями Граглберта.","Кроу прочитал окровавленный лист — Третий Трайл.","Стая троллепсов нападает на партию в лесу.","Партия путешествует по лесу, попадает в Скрюченные топи (по нарративу).","Партия зашла в юго-западную башню (рухнувшая, обломки).","Партия поднимается на верх центральной башни."],"locations":["Разрушенная эльфийская крепость в лесу","Юго-западная башня (рухнувшая)","Северо-восточная башня (с крысами)","Юго-восточная башня (Квиклинга)","Северо-западная башня (целая)","Центральная башня эльфийской крепости","Бристлхилл","Леса западнее Светоча (где гоблины-поджигатели)"]},{"n":30,"date":"2025-10-08","slug":"session-30","chapter_title":"Танец баобан сид и хаос в королевстве","summary":"Партия поднимается на вершину первой башни эльфийской крепости и встречает Баобан Сид — фею-нежить с окровавленными руками среди цветов. Кроу читает эльфийский текст из сундука.","npcs_met":["Баобан Сид","Травяной/лиственный леший с лианами","Стас (лесоруб)","Леди Лили Тескертин","Девушка-исследовательница (имя не названо)"],"key_events":["Партия поднимается на вершину первой башни эльфийской крепости и встречает Баобан Сид — фею-нежить с окровавленными руками среди цветов.","Кроу читает эльфийский текст из сундука.","Партия осознаёт, что они опаздывают на королевский ход в конце месяца (16-го Калистрила утром в крепости, далеко от Светоча).","Полный ход королевства Светоч с тремя нерешёнными вакансиями.","Случайное событие: к разрушенному древнему мосту прибыла группа учёных-историков.","Партия решает следующее направление."],"locations":["Разрушенная эльфийская крепость с тремя башнями","Место древня (бывший энкаунтер с увядающим деревом)","Светоч (столица)","Тацельфорд","Разрушенный древний мост (event-локация)","Южные леса (от Стаса)","Древнее талдорское место в горах","Проклятый остров (Остров зла)"]},{"n":31,"date":"2025-10-17","slug":"session-31","chapter_title":"Мерцающий остров и взгляд Йог-Сатота","summary":"У разбитых гнилых ящиков на причале партию атакует из засады «Ходак» — шамблер. Партия продвигается через крапиву и туман к древней разрушенной башне в центре острова.","npcs_met":["Шамблер «Ходак»","Виловисп (одинокий блуждающий огонёк)","Йог-Сатот (Йокса тот)","Анимированная статуя Йог-Сатота (страж сфер)","Тень-прайм (Shadow Prime)","Тени-копии PC (Shadow Doubles)","Учёная с координатами лаборатории","Лесоруб (квестодатель про копьё)","Искатель Истины (callback из сессии 25)"],"key_events":["У разбитых гнилых ящиков на причале партию атакует из засады «Ходак» — шамблер.","Партия продвигается через крапиву и туман к древней разрушенной башне в центре острова.","Невидимый виловисп (Will-o'-Wisp) атакует партию у башни.","В зале статуи — абстрактная статуя из 12 каменных сфер с пламенем.","В зале арок и скипетра партия встречает теней.","Кроу пересказывает события прошлой (30-й) сессии: долгий тяжёлый бой с безымянной вампиршей-некромантшей; возвращение в королевство, опоздание в делах; достройка сторожевой башни и пирса; разруливание возникших в королев"],"locations":["Мерцающее озеро","Мерцающий остров (Проклятый остров)","Древняя башня на острове (храм Йог-Сатота)","Подвал — комната с подношением монет","Зал статуи Йог-Сатота","Комната скамеек с подгоревшим потолком","Зал с арками и скипетром","Светоч (столица) — состояние сессии 31"]},{"n":32,"date":"2025-10-23","slug":"session-32","chapter_title":"Тени в подземном храме и племя ящеров","summary":"Спустились по лестнице в нижний зал — чёрные стены, пол в чёрной смоле, тени-силуэты вдоль стен. После боя обнаружены: торчащая из тушки бормотуна Кровавая Кукри Жажда; в кучке пепла одной из «теней» — кольцо с символом Фаразмы (240 gp); камень в полу со спиралью, излучающий сильную магию (выше уровня партии для Ide","npcs_met":["Вескет","Молодой ящер-страж","Волль-висп, выдающий себя за предка ящеров","Тролль-курьер Харгулки","Шаман небес и предков (троллиха Харгулки)","Многородный бормотун (1)","Многородный бормотун (2)","Племя людоящеров на реке (Синекожие)","Хищники-мимики (зовущие голосами)"],"key_events":["Спустились по лестнице в нижний зал — чёрные стены, пол в чёрной смоле, тени-силуэты вдоль стен.","После боя обнаружены: торчащая из тушки бормотуна Кровавая Кукри Жажда; в кучке пепла одной из «теней» — кольцо с символом Фаразмы (240 gp); камень в полу со спиралью, излучающий сильную магию (выше уровня партии для Ide","Посреди реки на илистом холме — крепкий старый частокол.","В пустой хижине-святилище ящер начал молитву, появилась вспышка зелёного света → летящий череп ящера.","Услышали крики о помощи на толдорском за бревном.","Изучая равнины Камилэндс 4 дня, партия нашла МНОГО следов троллей — буквально все направления (восток, юг, запад) под их контролем."],"locations":["Подземный храм с символом Фаразмы","Остров с башней посреди озера","Частокол ящеров на илистом холме","Равнины Камилэндс (Kamilands)","Место засады у бревна"]},{"n":33,"date":"2025-10-30","slug":"session-33","chapter_title":"Гиена-курьер, кобольды-шпионы и серебряный след","summary":"Допрос сдавшегося мимика-гиены. Полный ход королевства — достигнут 4-й уровень!","npcs_met":["Сдавшийся хищник-мимик (без имени)","Плезиозавр озера Серебристый След","Мирные грязевые элементали (Mud Mephits / Mud Elementals)","Мумифицированный капитан-генерал Талдорской армии","Кобольды-шпионы Харгулки (двое)","Бывший фермер-беглец (вор)","Гильдии лесорубов Светоча и Тацельфорда","Майгар Варн (через дипломатический инвой)","Вескет (через дипломатический инвой)"],"key_events":["Допрос сдавшегося мимика-гиены.","Полный ход королевства — достигнут 4-й уровень!","Необычное 4-дневное событие: разведка Харгулки в Светоче.","Партия посетила Экундайо в его съёмной комнате в Светоче.","Возвращаясь по озеру лодкой, партия замечает огромную тень в воде, движущуюся к ним.","Финал боя (отдельный файл): Кроу граблн под водой, тащит вниз."],"locations":["Равнины Камилэндс (Kamilands)","Крючковатые топи (Hooktongue Slough), юг","Озеро Серебристый След (Silver Step)","Илистые отмели Серебристого Следа","Комната Экундайо в Светоче","Лесорубка между Светочем и Тацельфордом","Дорога к Шахте Кобольдов + мост через реку","Новый дом в Светоче (для малоимущих)"]},{"n":34,"date":"2025-11-06","slug":"session-34","chapter_title":"Огненный дрейк на Когте: туч, волков и подложный дракон","summary":"На середине подъёма по горе Коготь — звук дождя на безоблачном небе. Кобольды привели партию к огромной крылатой ящерице — 'эти пришли к тебе!'.","npcs_met":["Огненный дрейк на горе Коготь","Кобольды-копатели дрейка","Принц волков","Грозовые тучи (живые торнадо)","Смутьян на торговой площади","Друг Нок-Нока (источник новостей)"],"key_events":["На середине подъёма по горе Коготь — звук дождя на безоблачном небе.","Кобольды привели партию к огромной крылатой ящерице — 'эти пришли к тебе!'.","Бой против огненного дрейка.","Новое событие: тролли и варги атакуют торговцев на границах.","Финальная сцена-затравка сессии.","При пересечении земель варгов на восточных равнинах DM применил нестандартную exploration-механику: вместо обычного random encounter — череда Survival-проверок (Каэлум ведущий, провал) с тратой 'ресурсов' (HP, слоты закл"],"locations":["Гора Коготь","Разрушенная застава на Когте","Восточные горные тропы у Когтя","Торговая площадь Светоча","Деревня глинолюдей на болоте (вспомнена)"]},{"n":35,"date":"2025-11-13","slug":"session-35","chapter_title":"Нарглум Трёхглазый и тень пропагандиста","summary":"Партия (Стразор, Кроу, Каэлум + Нок-нок + Харрим) прибыла к посту Олега за полдня по новым дорогам. Бой с тремя крылатыми гоблинскими псами.","npcs_met":["Нарглум Трёхглазый","Гоблин-друид у ворот Олега","Гоблин-культист, присягнувший Нок-ноку","Крылатые гоблинские псы Ламашту","Багбиры-телохранители Нарглума","Красношапка (Redcap) №1","Красношапка (Redcap) №2","Олег","Светлана","Григорий","Валя (Бала-player)"],"key_events":["Партия (Стразор, Кроу, Каэлум + Нок-нок + Харрим) прибыла к посту Олега за полдня по новым дорогам.","Бой с тремя крылатыми гоблинскими псами.","Заходят в большой тронный зал — каменные клетки на юге, разрубленная статуя превращена в каменный трон на востоке, спальные мешки и потухшие костровища.","Долгий и тяжёлый бой с Нарглумом.","Партия возвращается в столицу Светоч с головой Нарглума.","Бой у ворот поста Олега."],"locations":["Торговый пост Олега","Логово Нарглума у каскада водопадов","Деревня Перехода Невадки","Светоч (столица королевства)"]},{"n":36,"date":"2025-11-20","slug":"session-36","chapter_title":"Григорий-революционер и неожиданная гопница из Рестова","summary":"Стразор инкогнито шныряет по столице, собирая слухи про Григория (явная подозрительная заявка). Стразор ведёт Балу в храм-таверну Кайдена Кайлина выпить пива.","npcs_met":["Григорий","Стас Лесоруб","Торговец из Мивона","Торговец из Гальта (через Мивон)","Очарованный житель (хозяин Джейтал)","Перепуганный горожанин (объятый Балой)"],"key_events":["Стразор инкогнито шныряет по столице, собирая слухи про Григория (явная подозрительная заявка).","Стразор ведёт Балу в храм-таверну Кайдена Кайлина выпить пива.","Кроу разыскивает Джейтал в её укрытии — небольшом домике у горожанина, которого она обаяла заклятием (он считает её супругой).","Стразор, Бала и Кроу приходят на площадь, где Григорий ведёт ежеутреннюю речь («правители уже месяц обещают защитить от монстров, но кого они защищают, от каких троллей?»).","После доклада Джейтал (Григорий финансирует популярность через сделки с черным рынком — наркотики Дагермарка через мивонских торговцев, деньги раздаёт бедным и детям) партия проводит операцию.","Джейтал на второй визит докладывает: Григорий ведёт переговоры с лесорубами о забастовке за повышение зарплат."],"locations":["Улицы и площадь столицы Светоч","Храм Кайдена Кайлина (он же таверна-пивоварня)","Дом-укрытие Джейтал","Общинные дома лесорубов","Тронный зал замка правителей Светоча"]},{"n":37,"date":"2025-11-27","slug":"session-37","chapter_title":"Вонючая бомба для Барда и ящер в логове","summary":"Вечером 26-го Бала отправляется в ближайший лес с вином, ищет грибной круг, чтобы провести оккультный ритуал связи со своей 'старшей' — феей из детства, живущей в Семи Арках. 27 число.","npcs_met":["Григорий","«Старшая» Балы (фея из Семи Арок)","Пёс (просто Пёс)","Амери","Стасян (лесоруб)","Драк-ящер в южном логове","Мать Алдори (мать Балы)","Брат Балы (Алдори)","Лорд Харгулка (король троллей)","Барон Дрелев","Неприметный вербовщик Григория","Ассасины Красных Богомолов"],"key_events":["Вечером 26-го Бала отправляется в ближайший лес с вином, ищет грибной круг, чтобы провести оккультный ритуал связи со своей 'старшей' — феей из детства, живущей в Семи Арках.","27 число.","Кроу как магистр интриги ведёт суд (One Action Intrigue check, выпало 28 — успех).","Большой kingdom turn.","6-дневный путь на юг от столицы Светоча.","В пещере партия (Стразор, Кроу, Каэлум+Клык, Бала, Тристиан, Экундайо+Пёс) встретила огромного четырёхногого ящера-дракона."],"locations":["Площадь столицы Светоча","Замок Светоча (на месте Форта Рогача)","Темницы Светоча","Ратуша Светоча","Грибной круг в ближайшем лесу","Тацельфорд (второй город Светоча)","Замшелая гора-логово на юге","Земли варгов"]},{"n":38,"date":"2025-12-18","slug":"session-38","chapter_title":"Поражение армии и ледяной вожак варгов","summary":"Первый армейский бой кампании. Бой с большой стаей варгов под предводительством необычного босса-варга, чьё дыхание из льда.","npcs_met":["Ледяной вожак варгов","Стая южных варгов","Клык (паук Каэлума)","Амери","Тифлинка-просительница из библиотеки","Шика Многие","Кобольды Дрейка (разбежавшиеся)","Заговор барона Дрелева","Лорд Харгулка","Старшая Балы (фея)","Талдорские маги (древние)","Существа с плана огня (клиффхэнгер)"],"key_events":["Первый армейский бой кампании.","Бой с большой стаей варгов под предводительством необычного босса-варга, чьё дыхание из льда.","У раскопанной двери в горах.","Партия спускается в туннель, ведущий вглубь горы.","После поражения армии партия возвращается на коняшках 'грустно, побитые немного'.","Партия скрытно входит в земли варгов."],"locations":["Горящий лес — место армейской битвы","Равнины варгов на юге","Заброшенная охотничья ложа","Древние руины талдорских магов в горах","Библиотека Светоча"]},{"n":39,"date":"2025-12-26","slug":"session-39","chapter_title":"Лаборатория Талдора и сёстры-двойники","summary":"Бой с огненными элементалями плазменной комнаты. В южной комнате-кабинете атакуют дерновые псы (земляные элементальные собаки).","npcs_met":["Огненные элементали лаборатории","Дерновые псы","Ледяной элементаль воды","Амери","Клык (паук Каэлума)","Талдорские маги Экспедиционных корпусов","Канера (сестра-огонь)","Каликке (сестра-вода)","Лорд Харгулка","Основной оборонный корпус (распущен)","Второй оборонительный корпус","Лизардфолки (ящеры)"],"key_events":["Бой с огненными элементалями плазменной комнаты.","В южной комнате-кабинете атакуют дерновые псы (земляные элементальные собаки).","Северная (водная) комната-кабинет.","Стразор по Society check (24+) вспоминает про Талдорские Экспедиционные корпуса (~2000 лет после основания Абсалома).","Кульминация сессии.","Большой kingdom turn в столице."],"locations":["Лаборатория Талдорских магов","Плазменная комната (верхний уровень)","Южная комната-кабинет (карты)","Водная комната-кабинет (офис заведующего)","Столица Светоча (после kingdom turn 39)","Тацельфорд (второй город)","Новые дороги (хексы)"]},{"n":40,"date":"2026-01-01","slug":"session-40","chapter_title":"Королевский ход, могила тигриного владыки и первая армейская победа","summary":"Полный королевский ход за конец месяца Эрастус. В зарослях ежевики на равнинах партия обнаруживает каменную могилу.","npcs_met":["Калики и Канера (сёстры-акалики)","Амери","Лорд Харгулка","Армия троллей (южная)","Похороненный нумерийский воин (вероятно тигриный владыка)","Раненый сержант разбитой армии (упоминание)","Фагрим (упоминается)","Клан Тигриных Владык (Нумерия)","Клан Алдори","Келиды (нумерийские племена)","Владыки Мамонта","Сквоттеры в столице Светоча"],"key_events":["Полный королевский ход за конец месяца Эрастус.","В зарослях ежевики на равнинах партия обнаруживает каменную могилу.","Во время раскапывания могилы — социалка про семьи.","Первая армейская ПОБЕДА Светоча.","После победы DM объявляет: 'У вас повышение уровня.","Открытие сессии."],"locations":["Библиотека Светоча","Светоч (столица королевства)","Скрюченные / Крючковатые топи","Каменная могила нумерийского воина","Южный лес — поле первой армейской победы","Подход к крепости Харгулки (клиффхэнгер)","Застава Олега"]},{"n":41,"date":"2026-01-15","slug":"session-41","chapter_title":"Штурм крепости Харгулки: невидимый клин и древнее эхо Торага","summary":"Партия осматривает подходы. ПЕРВЫЙ БОЙ.","npcs_met":["Лорд Харгулка","Хобгоблин-командир (лучник)","Хобгоблины-лучники (элитные)","Тролли-стражи крепости","Гарпии-певицы крепости","Боевые псы Харгулки","Хант Торага (дварфийский молитвенный)","Кобольды-союзники (Дружина Беспределья)","Клык (пересобранный паук)","Тристиан (не взят)","Сын Харгулки (упомянут)","Кентавры-соседи"],"key_events":["Партия осматривает подходы.","ПЕРВЫЙ БОЙ.","Партия входит в северную дверь — храмовый зал Торага.","Партия выходит к южной/восточной двери, открывает её — попадают в ТРОННЫЙ ЗАЛ.","Открытие сессии.","Партия с 2 армиями продвигается вглубь леса Харгулки."],"locations":["Крепость Лорда Харгулки","Сторожевая комната крепости (вход)","Храмовый зал Торага (северная комната)","Тронный зал крепости","Винтовая лестница (южная)","Кобольдское поселение у подножия крепости","Лес владений Харгулки"]},{"n":42,"date":"2026-01-22","slug":"session-42","chapter_title":"Кровь на нижнем этаже: засада троллей, месть Экундайо и тронный зал Харгулки","summary":"ФИНАЛЬНЫЙ БОЙ. В мясной пещере партия встретила скрэга (особого тролля) и великана клана Граглберта — те только что закончили переговоры (один другого по голове ударил).","npcs_met":["Лорд Харгулка","Королева Харгулки (жрица-заклинательница)","Этин (двухголовый тролль)","Скрэг (особый тролль)","Великан клана Граглберта","Харим","Клык (новая форма, разрушен)","Хобгоблины-снайперы (трое лучников)","Тролли-псы","Гарпия (улетевшая)","Хаунты (haunts) фонтана","Дварфская крепость (историческая)"],"key_events":["ФИНАЛЬНЫЙ БОЙ.","В мясной пещере партия встретила скрэга (особого тролля) и великана клана Граглберта — те только что закончили переговоры (один другого по голове ударил).","Открытие сессии.","Добивание трёх лучников-хобгоблинов, сбежавших из соседней комнаты.","Партия 2.5-3 часа сидит в забаррикадированной комнате, лечится Treat Wounds.","Партия исследует первый этаж."],"locations":["Крепость Харгулки","Комната-распутье первого этажа (с лестницей)","Ночлежка троллей (чуфяки)","Мясная пещера (склад трупов и охотничьи трофеи)","Псарня троллей-псов","Башня (гнездо гарпии)","Коридор второго этажа (перед тронным залом)","Тронный зал Харгулки"]},{"n":43,"date":"2026-02-12","slug":"session-43","chapter_title":"Договор с Дриадой и падение Харгулки: победа ценой Балы","summary":"КЛИНИЧЕСКАЯ СМЕРТЬ КРОУ И ВСТРЕЧА С ДРИАДОЙ. ВОСКРЕШЕНИЕ КРОУ И КИНЕМАТОГРАФИЧНОЕ ВОЗВРАЩЕНИЕ.","npcs_met":["Лорд Харгулка","Королева Харгулки (жрица-заклинательница)","Этин (двухголовый тролль)","Хобгоблин-лучник (сбежавший снайпер)","Тролль-пёс Харгулки","Дриада (Фея-покровительница Кроу)","Харим","Пёс Экундайо","Клык (разрушен снова)","Курмиль (злой друид) — упомянут в контексте"],"key_events":["КЛИНИЧЕСКАЯ СМЕРТЬ КРОУ И ВСТРЕЧА С ДРИАДОЙ.","ВОСКРЕШЕНИЕ КРОУ И КИНЕМАТОГРАФИЧНОЕ ВОЗВРАЩЕНИЕ.","ФИНАЛЬНАЯ ДУЭЛЬ С ХАРГУЛКОЙ.","Начало основной сессии.","ДОЛГИЙ БОЙ С ЭТИНОМ.","ЭПИЛОГ И ИССЛЕДОВАНИЕ КРЕПОСТИ."],"locations":["Коридор и лестница перед тронным залом Харгулки","Тронный зал Харгулки (зачищен)","Сокровищница Харгулки","Кэш этина (плохо спрятанный)","Склад продовольствия","Комната с котлом ('ведьмы')","Мастерская хобгоблинов","Место, отмеченное 'ОПАСНОСТЬ' на карте Харгулки (восток)"]},{"n":44,"date":"2026-02-19","slug":"session-44","chapter_title":"Защита Светоча от магических зверей: чужими руками","summary":"DM открывает игровую часть: 'Пока правители и отважные герои королевства находятся вдалеке, сражаясь с опасным троллем, его армией, город живёт как обычно. Партия движется на восток, приближаясь к окраине города.","npcs_met":["Калики","Магические звери — атакующая стая","Медвесыч-разрушитель (Owlbear)","Магические кабаны","Стая магических волков","Стаи магических ворон","Магическая росомаха","Спасённые горожане Светоча","Жрецы Фаразмы (фаразмиты) в столице","Очередь в загробном мире Фаразмы"],"key_events":["DM открывает игровую часть: 'Пока правители и отважные герои королевства находятся вдалеке, сражаясь с опасным троллем, его армией, город живёт как обычно.","Партия движется на восток, приближаясь к окраине города.","Второй вал кабанов и ворон рядом с забаррикадированными домами.","Финальный затяжной бой.","После боя партия делает Knowledge-проверки (библиотечные знания Калики/Октавии, природа Регонгара).","Партия идёт к фаразмитам с трупами."],"locations":["Восточный квартал Светоча","Деревянные стены Светоча","Мост на восток (построенный партией)","Улочки восточного квартала (место первой стычки)","Мэрия Светоча (резиденция правителей)"]},{"n":45,"date":"2026-03-12","slug":"session-45","chapter_title":"Песнь о медвесыче, проклятие Кроу и великан-самогонщик","summary":"Партия путешествует, Кроу в этот момент с ними (хоть игрок Тарас отсутствует — отыгрывает DM). Партия после неудачного ритуала засыпает на поляне.","npcs_met":["Мунгук","Чарокот","Григорий","Кроу (в проклятии)","Мёртвый эльфийский воин","Крикливый гриб (Шрикер)","Фиолетовые ядовитые грибы (Violet Fungi)","Медвесыч (огромный, в пещере)","Фейские 'миндальные сёстры' Балы (Баб и Фавни)","Шико многие (Shyka the Many)","Тан (фея на пиру)","Клык (восстановленный, паукообразная форма)"],"key_events":["Партия путешествует, Кроу в этот момент с ними (хоть игрок Тарас отсутствует — отыгрывает DM).","Партия после неудачного ритуала засыпает на поляне.","Партия едет к шахте по докладу: Григорий, отрабатывавший срок и приговорённый к изгнанию, в последний день сошёл с ума.","Бала проводит ритуал в третий раз.","Партия подходит к месту, отмеченному троллями на картах как 'опасно'.","Бой с грибами у входа в пещеру медвесыча."],"locations":["Светоч (столица королевства)","Королевская шахта (где сошёл с ума Григорий)","Поляна с грибным кругом (место ритуалов Балы)","Бывшие земли Харгулки (южные леса)","Роща мёртвого эльфа","Тройной деревянный мост (слияние Шрайка и Малого Селена)","Пещера медвесыча"]},{"n":46,"date":"2026-03-19","slug":"session-46","chapter_title":"Логово Медвесыча: огненная звезда, призрачный гнев матери и Бубочка","summary":"Призрачные удары попадают по партии (реально наносят урон через мираж). Открытие сессии.","npcs_met":["Гигантский Медвесыч (уникальный)","Самка Медвесыча (труп, мать Бубы)","Буба (Бубочка) — детёныш Медвесыча","Хаунт ярости матери Медвесыча","Гигантские пауки паутинной пещеры","Неудачливый маг (труп в стенке)","Эрик (предположительно, труп в гнезде Медвесыча)","Чарокот (фейский кот)","Холмовой великан-работник","Григорий (дварф-шахтёр, сошёл с ума)","Клык (восстановлен)","Эльфийский воин (труп в лесу)"],"key_events":["Призрачные удары попадают по партии (реально наносят урон через мираж).","Открытие сессии.","Гигантский Медвесыч проснулся в туннеле перед партией.","Партия входит в большую пещеру с жужжанием мух.","После упокоения хаунта партия обыскивает гнездо у восточной стены.","DM подсказывает: 'у вас на мироборде отсутствует ещё один стихотворный фрагмент, который вы где-то недавно слышали — что Григорий шептал'."],"locations":["Логово Медвесыча (пещерная система)","Узкий туннель Медвесыча","Паутинная пещера","Главное логово Медвесыча (хаунт-комната)","Естественная дыра-провал (40 футов)","Заросшая пещера ходока (shambler)","Мутный пруд в логове","Лесные земли бывших владений Харгулки"]},{"n":47,"date":"2026-03-26","slug":"session-47","chapter_title":"Этеркапы в пещере, проклятое кольцо и тёмная сторона силы Кроу","summary":"КЛЮЧЕВОЙ NARRATIVE MOMENT. После боя партия выходит.","npcs_met":["Буба (медвесыч-детёныш)","Этеркапы (гуманоидные пауки)","Труп в коконе (жертва пауков)","Каменный алтарь Ламашту (Мать Монстров)","Инквизитор Абадара","Харим"],"key_events":["КЛЮЧЕВОЙ NARRATIVE MOMENT.","После боя партия выходит.","Бала идёт в свежую библиотеку Светоча.","Кроу находит Джейтал, скрывающуюся в чьём-то доме.","Королевский ход за Рова.","Открытие."],"locations":["Верхний уровень пещеры медвесыча (этеркапы)","Полянка с алтарём Ламашту","Холмоград (третья деревня)","Хайбар (древние руины)","Последний Оплот (Lastwall / Gravelance)"]},{"n":48,"date":"2026-04-02","slug":"session-48","chapter_title":"Два королевских хода, присяга ящеролюдов и пир в честь Экундайо","summary":"DM раскрывает важную новость, произошедшую МЕЖДУ сессиями: дипломаты королевства отправились на остров ящеролюдов и получили от них присягу верности. Первый королевский ход в S48 — месяц Рова.","npcs_met":["Иосис Вимарилиан","Бевен Армаки","Джамель Виссер","Эмбетские охотники (гильдия)","Ящеролюды (Иркси)","Незваная гостья (cliffhanger)","Инквизитор Абадара","Скваттеры (бездомные/безработные)","Активность монстров (последствия нашествия)","Синдикат Чёрные Слёзы (возвращение)","Культисты Ламашту (паломники)","Буба (медвесыч-детёныш)"],"key_events":["DM раскрывает важную новость, произошедшую МЕЖДУ сессиями: дипломаты королевства отправились на остров ящеролюдов и получили от них присягу верности.","Первый королевский ход в S48 — месяц Рова.","Второй королевский ход в S48 — месяц Ламашту.","На втором королевском ходу S48 (Ламашту) — кульминационное событие.","Линзи приходит к правителям с инициативой: 'У вас, такая проблема, большая проблема.","ПИР В ЛЕСНОЙ ПОЛЯНЕ возле озера Серебристого Следа в честь Экундайо."],"locations":["Деревня ящеролюдов (Иркси / Нижний Ящгород — рабочее)","Озеро Серебристого Следа","Восстанавливаемый охотничий домик (база Эмбетских охотников)","Поляна в лесу возле озера Серебристого Следа (место пира)","Зал Фестивалей (Festival Hall) в Светоче","Парк в Тацельфорде","Каменоломня (Stonemason) в Холмограде","Мельница (Mill) в Светоче"]},{"n":49,"date":"2026-04-16","slug":"session-49","chapter_title":"Пир в честь Экундайо, засада на мосту Селена и след культа Героны","summary":"Резко — на пир заходит мускулистая женщина-воин с молотом и в броне, явно жрица. Энтави отводит Экундайо в сторону для приватного разговора.","npcs_met":["Энтави","Граглберт","Виверна Граглберта","Огры банды Граглберта","Верховная жрица Героны (в Светоче)","Культисты Героны в Светоче","Мария (служанка замка)","Харим","Бристолхилл (родная деревня Экундайо)","Эмбетские охотники","Повар-открыватель ресторана","Кинетистка"],"key_events":["Резко — на пир заходит мускулистая женщина-воин с молотом и в броне, явно жрица.","Энтави отводит Экундайо в сторону для приватного разговора.","Когда Экундайо немного успокоился и Бала отошла, Стразор тактично подходит: 'я знаю что ты не любишь длинных разговоров.","ОСНОВНОЙ БОЙ.","После боя Энтави подходит к Экундайо: 'твоё отомщение закончено.","По возвращении в Светоч партия снова обсуждает проклятие."],"locations":["Древний мост через Малый Селен (логово Граглберта)","Амбар культа Героны (северо-восточная окраина Светоча)","Большое озеро железнозавров","Место проведения пира (лес возле Светоча)"]},{"n":50,"date":"2026-04-23","slug":"session-50","chapter_title":"Засада на культ Героны и побег жрицы Ниски","summary":"БОЙ с культистками Героны в подвале амбара. Партия бежит догонять Ниску.","npcs_met":["Ниска","Верина","Вторая выжившая культистка (без имени)","Убитые культистки Героны","Джамиль Виссер","Эдна и Юлия Алдори","Аномеда Беловара","Тимол","DM (Саша)"],"key_events":["БОЙ с культистками Героны в подвале амбара.","Партия бежит догонять Ниску.","Партия (плюс приглашённая Джейтал) допрашивает Верину в подвале замка ('комната для особо жёстких переговоров').","Партия решает что Верина (и вторая выжившая) — не виновны, ею воспользовались.","Перед допросом Джейтал напомнила Бале долг: 'помните наш уговор?","Кроу идёт в библиотеку Светоча искать ритуалы и проклятия Героны."],"locations":["Амбар культа Героны (северная часть Светоча)","Комната для особо жёстких переговоров в замке Светоча","Охотничий домик на реке Свиль","Дикие земли на берегах реки Свиль","Горы между Варнхольдом и Светочем (логово сприганов)"]},{"n":51,"date":"2026-04-30","slug":"session-51","chapter_title":"Охотничий пир на реке Свирь и первый трофей — зелёная виверна","summary":"Каэлум сделал recap прошедших 3-х сессий (48-50): партия зачистила подвал с культистами (двое выжили, главарь сбежал свитком), взяли в плен Валерину, после допроса Джейтал-Балы узнали о Чёрных Слёзах и чёрном коте. Жамель объявляет о причине охотничьего домика: они нашли Вата Локера, умершего от виверны, отследили её и нашли следы гидры и крут.","npcs_met":["Жамель","Аномеда","Эдна и Юлия (сёстры Алдори)","Аменда Беловар","Ват Локер","Зелёная говорящая виверна (с шипами)","Валерина","Сеть чёрных котов-шпионов","Крут (поедатель крокодилов)","Гидра пятиголовая огненная"],"key_events":["Каэлум сделал recap прошедших 3-х сессий (48-50): партия зачистила подвал с культистами (двое выжили, главарь сбежал свитком), взяли в плен Валерину, после допроса Джейтал-Балы узнали о Чёрных Слёзах и чёрном коте.","Жамель объявляет о причине охотничьего домика: они нашли Вата Локера, умершего от виверны, отследили её и нашли следы гидры и крут.","Королевский ход (месяц Ломашан).","Случайные события королевства.","Партия поднялась на скальный уступ (~10 мин), у входа в пещеру растерзанные трупы, внутри у задней стены гуманоид и крупное животное под ярко окрашенными цветами.","Стразор поднимает вопрос: как снять Doom-проклятие Кроу."],"locations":["Охотничий домик на реке Свирь","Остров охоты на реке Свирь","Разрушенная хижина Вата Локера","Пещера виверны на скальном уступе","Тела под цветочным ковром в пещере виверны","Зелёный пояс / Холмогорье / Скрюченные топи (предписанная Paizo карта)","Подвал с лестницей и культистами"]},{"n":52,"date":"2026-05-07","slug":"session-52","chapter_title":"Охота на чудовищ Свирь: виверна, мухоловка с цветами и встреча с пятиглавой Гидрой","summary":"Recap прошлой сессии (S51?) от Стразора и Каэлума: Кингдом-дела прошли неплохо, нивелировали урон стенам, стройки, известность/деньги/еда. БОЙ 1 — Гигантская поражённая мухоловка у водопада.","npcs_met":["Молодая Виверна с необычной чешуёй","Гигантская мухоловка с лианами (поражённая болезнью)","Взорванный труп медведя с полевыми цветами","Пятиглавая Гидра (ярко-зелёная с красными полосками)","Лазулин (белоснежный варг, вожак стаи)","Аномеда (бардесса из Питакса, конкурент-охотник)","Трое эмбетских охотников (на Крута)","Сёстры Алдори (отпрыски рода Алдори)","Джамиль (хозяин охотничьего состязания)","Калики (тифлинг-кинетист)","Клык (механический паук Каэлума)"],"key_events":["Recap прошлой сессии (S51?) от Стразора и Каэлума: Кингдом-дела прошли неплохо, нивелировали урон стенам, стройки, известность/деньги/еда.","БОЙ 1 — Гигантская поражённая мухоловка у водопада.","После боя с мухоловкой партия осматривает место.","Лазулин рассказывает: 'Несколько бойцов из моей стаи пробовали охотиться на западном берегу.","БОЙ 2 — Пятиглавая Гидра (CLIFFHANGER).","Партия видит на гранитной скале южного берега (~500-600 футов) — лагерь Аномеды с двумя телохранителями."],"locations":["Охотничьи угодья на реке Свирь","Пещера-расщелина Виверны на холмах","Каскадный водопад с мёртвыми растениями и ритуальным кругом","Восточный берег Свирь (территория варгов Лазулина)","Гнездо Пятиглавой Гидры (северная чаща)","Замок Бастард в Усталаве (AP-приключение, мета-обсуждение)"]},{"n":53,"date":"2026-05-13","slug":"blood-hydra-pierced-bird","chapter_title":"Добивание Пятиглавой Гидры, кровавые письмена в гнезде, переименование охотничьего домика в «Пронзённую пташку» и вас…","summary":"БОЙ 1 (главный). После убийства Гидры партия осматривает гнездо.","npcs_met":["Пятиглавая Гидра (ярко-зелёная с красными полосками)","Василиск, вылупившийся из Тимола","Тимол (официант охотничьего домика)","Джамиль Виссер","Аномеда Беловара","Сёстры Алдори (Эдна и Юлия)","Каликке (тифлинг-кинетист, дневная сестра)","Канера (тифлинг-кинетист, ночная сестра-огонь)","Трое эмбетских охотников","Клык (обломки в рюкзаке Каэлума)"],"key_events":["БОЙ 1 (главный).","После убийства Гидры партия осматривает гнездо.","Кроу замер над лужей крови у одной из могил — прищуривается и читает по алым разводам ЦЕЛОЕ ПРЕДЛОЖЕНИЕ: «ГЕРОИ МСТЯТ ЗАПАВШИХ, ЯРОСТЬ В СЕРДЦЕ КАМЕНЬ, СЕРДЦЕ КАМЕНЬ, ПЛАМЕНЬ».","Беседы на пиру: 1) Стразор расспрашивает Канеру про вызов через зеркало — «вы научились это делать через ваши приключения», Канера говорит «я больше люблю изысканные вещи» (наливает себе вина побольше), Стразор обещает п","КРИЗИС НА ПИРУ.","БОЙ 2 — Василиск."],"locations":["Гнездо Пятиглавой Гидры (северная чаща)","Охотничий домик «Пронзённая пташка» (бывший лодж Джамиля)","Баржа Джамиля на реке Свирь","Луска Белая (бэкграунд Кроу — храм Фаразмы)","Варнхольд (Майгар Варн) — куда отправлены тела/вещи Алдори"]},{"n":54,"date":"2026-05-28","slug":"semena-v-ploti","chapter_title":"Семена в плоти: расследование проклятия-портала, контракт из Мивона, белый флаг к волкам и битва на лесопилке","summary":"День 5 Нета. День 6 Нета.","npcs_met":["Тимол (официант охотничьего домика, жертва проклятия-портала)","Висер (хозяин охотничьего лагеря, наниматель Тимола)","Джамиль (хозяин охотничьего состязания)","Нок-Нок (гоблин-плут)","Клык (механический паук Каэлума, восстановленный)","Белый Вожак волков (вожак стаи восточного берега Свирь, возможно Лазулин)","Бастия (мёртвый альбатрос Балы)","Два медвесыча с кровавой пеленой (с лесопилки)","Лесорубы лесопилки","Глашатай-вестник из столицы","Дураки, вступающие в культ от страха","Буба (медвесыч-питомец Балы, не присутствует физически)"],"key_events":["День 5 Нета.","День 6 Нета.","День 13 Нета.","БОЙ — Лесопилка между Светочем и Тацельфордом.","DM вводит НОВУЮ МЕХАНИКУ ИЗУЧЕНИЯ (Investigation).","Бала привязывает к палке полоску белой ткани, нацепляет медную нашивку 'журналист' и направляется в логово Белого Вожака волков (тот же Лазулин из S52)."],"locations":["Охотничий домик Джамиля/Висера (база расследования)","Охотничьи угодья на реке Свирь (лагерь у реки)","Логово Белого Вожака волков (восточный берег)","Каскадный водопад с ритуальным кругом (повторное посещение)","Столица Светоч (визит Балы)","Тацельфорд (город с подвалами культа)","Лесопилка между Светочем и Тацельфордом","Деревня Ящеров (присоединившаяся к королевству)"]},{"n":55,"date":"2026-06-11","slug":"velikie-gobliny-pridut","chapter_title":"Великие гоблины придут: штурм храма Ламашту в Тацельфорде и разоблачение лже-пророчества","summary":"Партия спускается в подземный храм Ламашту. БОЙ — Храм Ламашту.","npcs_met":["Жрец-фанатик Ламашту (взявший заложника-эльфийку)","Второй жрец культа (тот, кто крикнул из-за угла)","Культисты-крестьяне в робах (десятки)","Девушка-эльфийка (заложница жреца)","Связанные пленники у алтаря Ламашту (~3-4 человека)","Клык (механический паук Каэлума)","Двое медвесычей у лесопилки (обвитых лианами)","Двое рабочих-христиан у лесопилки","Жители Тацельфорда (часть вступила в культ)","Глава стражи Тацельфорда","Потерянная армия Тацельфорда","Поставщики мяса и дичи в Тацельфорде"],"key_events":["Партия спускается в подземный храм Ламашту.","БОЙ — Храм Ламашту.","После боя партия осматривает храм.","Несколько дней партия живёт в Тацельфорде, разбирая бумаги и опрашивая жителей.","Финальный дебриф у костра.","Открытие сессии."],"locations":["Тацельфорд (город Светоча)","Подземный храм Ламашту в Тацельфорде","Лесопилка под Тацельфордом","Холмы Селен (южное направление)","Каскадный водопад с ритуальным кругом (Свирь, охотничьи угодья)"]},{"n":56,"date":"2026-06-23","slug":"zerno-dlya-bezdny","chapter_title":"Зерно для Бездны: следы Технолиги у лесопилки, культ Цветения обретает имя и месяц королевских дел","summary":"По пути к лесопилке, на срезе через лес — очень странные следы: огромный двуногий гуманоид (size large) с тремя-четырьмя пальцами 'буквой З'. На лесопилке (закрыта, оцеплена стражей) Стразор с Detect Magic и медициной осматривает лесорубов и находит ДВОИХ БОЛЬНЫХ с ещё не активированными семенами.","npcs_met":["Паск (низший демон греха лени)","Отряд Технолиги у лесопилки (4 человека + огромное существо)","Огромное трёхпалое существо Технолиги (по следам)","Двое спасённых лесорубов (семена извлечены)","Взорвавшиеся жители Тацельфорда","Торговец, взорвавшийся на дороге у Светоча","Ячейка культа Цветения в Холмограде","Линзи (Канцлер, гасит скандал)","Калики (библиотекарша Светоча)","Еанди (молчащая связная Каэлума)","Сиррула (искомая через гонца)","Валери (объект слуха 'не человек')"],"key_events":["По пути к лесопилке, на срезе через лес — очень странные следы: огромный двуногий гуманоид (size large) с тремя-четырьмя пальцами 'буквой З'.","На лесопилке (закрыта, оцеплена стражей) Стразор с Detect Magic и медициной осматривает лесорубов и находит ДВОИХ БОЛЬНЫХ с ещё не активированными семенами.","Анализ извлечённых семян даёт прорыв в понимании механизма проклятия.","21 Нета.","21-22 Нета.","23-26 Нета — четыре библиотечных дня (+1 бонус от библиотеки)."],"locations":["Лесопилка под Тацельфордом","Тацельфорд","Библиотека Светоча","Холмоград","Зеленохватие (поселение гоблинов в холмах Селен)","Холмы Селен (южное направление)","Хайот Хакадос (Нумерия)","Водная система Светоча (реки Шрайк, Торн, Сканк, озеро Тасквотер, Малый Селен)"]},{"n":57,"date":"2026-06-25","slug":"maska-shamana","chapter_title":"Маска шамана: перформанс 'Нок-Нок — избранник Ламашту' у ворот Зеленохватия и дуппельгангер под маской верховного жреца","summary":"План Балы: 'У нас же Нок-Нок. Кульминация перформанса.","npcs_met":["Верховный шаман Зеленохватия (дуппельгангер-самозванец)","Двое гоблинов-стражей на надвратных башнях","Гоблины Зеленохватия (около двух десятков)","Клык (механический паук Каэлума)","Док-Док Ломаштинский (гоблин из байки стражей)","Коза в загоне Зеленохватия"],"key_events":["План Балы: 'У нас же Нок-Нок.","Кульминация перформанса.","Осмотр деревни изнутри: каменное здание, 'запертое' верёвками на колышке; кладбище с насыпями; палатки из шкур; загон с козой; тренировочная площадка; свежая постройка на пепелище.","Навстречу выходит верховный шаман: странной формы шлем, зелёное друидическое украшение, гоблинский тесак на поясе.","Фаза 1 боя — растения и ярость.","Фаза 2 — Sanctuary и погоня."],"locations":["Зеленохватие (гоблинская деревня в холмах Селен)","Камень Ламашту (алтарь в Зеленохватии)","Святилище Ламашту (здание за статуей на деревянных опорах)","Запечатанное каменное здание и кладбище Зеленохватия","Пожарище у алтаря (сгоревшие постройки Зеленохватия)","Холмы Селен (южное направление)"]}],"npc_index":{"Лорд Харгулка":{"first_session":27,"role":"Огромное существо, появляется в пещере кобольдов 22 Абадиуса как контрпредложение партии."},"Григорий":{"first_session":35,"role":"Хорошо упитанный, в недешёвых одеяниях, с очень нерезкой довольной улыбкой."},"Амери":{"first_session":37,"role":"Компаньон-варден (страж королевства)."},"Харим":{"first_session":42,"role":"Ключевой персонаж сессии: 1) узнал крепость (бывшая дварфская, сессия 41); 2) аура страха действует на врагов: 'все проваливают, никто не может устоять против э"},"Джаманди Алдори":{"first_session":1,"role":"Хозяйка замка Алдори, пригласила героев на званый ужин — клич на отжимание Украденных Земель."},"Клык (механический паук Каэлума)":{"first_session":52,"role":"Восстановлен после S46-47 и снова в строю."},"Барон Дрелев":{"first_session":3,"role":"Конкурент клича — получает Кучковатые топи."},"Тартуччио":{"first_session":5,"role":"Предаёт партию: уводит за собой Амири, Харрима и Джейтал."},"Майгар Варн":{"first_session":5,"role":"Встречен на выходе из Рестова — на его караван тоже напали."},"Олег":{"first_session":6,"role":"Хозяин торгового поста."},"Светлана":{"first_session":6,"role":"Жена Олега."},"Женщина-дух земель":{"first_session":6,"role":"Является Кроу во сне (Сон №1): просит остановить Рогача и друида."},"Мик-Мэк":{"first_session":9,"role":"Кобольд-страдалец, спасён из плена гремлинов (те украли реликвию его племени)."},"Калан":{"first_session":11,"role":"Командирша отряда Технолиги («женщина в странной броне, металл невиданный» по рассказу беглеца)."},"Фея-дракончик":{"first_session":13,"role":"Вместе с феей-стрекозой пакостят партии, становясь невидимыми."},"Тан":{"first_session":24,"role":"Владыка Первого Мира и устроитель Пира."},"Клитус":{"first_session":24,"role":"Близкий советник Тана, единственная цель — поддерживать Тана в хорошем настроении."},"Летний Шторм":{"first_session":24,"role":"Огромный говорящий кролик, должен Лиге Искателей за прошлое освобождение."},"Граглберт":{"first_session":29,"role":"Опасный холмовой гигант, носящий полную броню из кожи виверны (его наручи носят рядовые тролли)."},"Клык (паук Каэлума)":{"first_session":38,"role":"Починен с прошлой сессии."},"Королева Харгулки (жрица-заклинательница)":{"first_session":42,"role":"Стояла рядом с троном Харгулки во время штурма зала."},"Этин (двухголовый тролль)":{"first_session":42,"role":"Прибежал в тронный зал на крик Харгулки 'слуги ко мне!'."},"Буба (медвесыч-детёныш)":{"first_session":47,"role":"Детёныш медвесыча, найденный Балой в сессии 46 в пещере, где хант защищал его от людей."},"Инквизитор Абадара":{"first_session":47,"role":"Прибыл в Светоч на королевском ходу Рова."},"Джамиль Виссер":{"first_session":50,"role":"Известный охотник окрестных земель, организатор охотничьего пира."},"Аномеда Беловара":{"first_session":50,"role":"Прибыла из Питакса как представительница высшего элитного общества города."},"Пятиглавая Гидра (ярко-зелёная с красными полосками)":{"first_session":52,"role":"Главный монстр охотничьего состязания."},"Джамиль (хозяин охотничьего состязания)":{"first_session":52,"role":"Хозяин охотничьего домика, организовавший охотничье состязание для нескольких команд."},"Мэр Сильверхолла (имя неизвестно)":{"first_session":1,"role":"По Miro-таймлайну 15 Калистрила герои получили «миссию от мэра» в Сильверхолле."},"Майгар Варн (Маегарн)":{"first_session":3,"role":"Один из конкурентов клича — получает Номенские высоты (кентавры)."},"Синяя великаша-предводительница":{"first_session":4,"role":"Предводительница налёта Чёрных Слёз на поместье."},"Дракон Чёрных Слёз":{"first_session":4,"role":"Вместе с великашей разносит замок Алдори; забирает великашу и улетает."},"Некромантка (имя неизвестно)":{"first_session":4,"role":"Гостья поместья, спасена героями от огра во время атаки."},"Эльфийка-крестьянка с косой":{"first_session":4,"role":"Спасена героями от ассасинов."},"Солдат с урной":{"first_session":5,"role":"Встречен в таверне у Переправы: его брат умер, обижен на власть."},"Хаппс":{"first_session":6,"role":"Текущий главарь бандитов Рогача у поста (раньше — Крессель)."},"Боккен":{"first_session":7,"role":"Алхимик у поста Олега."},"Джод":{"first_session":7,"role":"Ищет храм Эрастила в Скрюченных топях."},"Соломон":{"first_session":7,"role":"Воин-одиночка, идёт сражаться с бандитами в одиночку."},"Курмиль (упомянут)":{"first_session":7,"role":"Брат Боккена, злой друид — пока только в рассказе Боккена."},"Кестен":{"first_session":9,"role":"Наёмник на посту Олега, принимает пленников."},"Тартук":{"first_session":9,"role":"Шаман-вождь кобольдов Рудника Октоп."},"Фалгрим (упомянут)":{"first_session":9,"role":"Варисиец, сбежавший с деньгами Кестена; цель квеста."},"Нежить у разрушенного моста (призрак)":{"first_session":10,"role":"Выходит из воды у моста с табличкой и ржавым колокольчиком; просит доказательства смерти Рогача."},"Беглец от «живодёров»":{"first_session":11,"role":"Прибегает к героям с рассказом о «живодёрах» под предводительством женщины в странной броне — первая наводка на Технолигу."}}};
+
+/* ---------- data prep ---------- */
+const EVENTS = TIMELINE.events;
+const N = EVENTS.length;
+const TYPE_COLOR = {location:0x4aa22c, event:0x1fb3a5, encounter:0xc0563a, travel:0x5a7fd6};
+const TYPE_NAME  = {location:'Поселение / отдых', event:'Событие', encounter:'Стычка', travel:'Путь'};
+const TYPE_CSS   = {location:'#4aa22c', event:'#1fb3a5', encounter:'#c0563a', travel:'#5a7fd6'};
+const MONTH_ORDER = ['Абадиус','Калистрил','Фараст','Гозран','Дезнус','Саренит','Эрастус','Ародус','Рова','Ламашан','Нетх','Кутона'];
+function monthOf(d){
+  if(!d) return null;
+  for(const m of MONTH_ORDER){ if(d.includes(m.slice(0,6))) return m; }
+  return null;
+}
+function yearOf(d){ const m=d&&d.match(/47\d\d/); return m?m[0]:''; }
+
+// related sessions: keyword match between event title and session texts
+const STOP = new Set(['нападение','возвращение','возврат','миссия','поход','атака','путь','дорога','бой','битва','засада','встреча','ночь','день','первый','новый','большой','великий','старый']);
+function keywords(s){
+  return (s.toLowerCase().match(/[а-яёa-z]{5,}/g)||[]).map(w=>w.replace(/(ами|ями|ов|ев|ой|ей|ах|ях|ам|ям|ую|ая|ое|ые|ий|ый|ть|ла|ло|ли|а|я|о|е|у|ю|ы|и|ь)$/,'')).filter(w=>w.length>=4 && !STOP.has(w));
+}
+function relatedSessions(ev){
+  const kws = keywords(ev.title + ' ' + (ev.location||''));
+  if(!kws.length) return [];
+  const out=[];
+  for(const s of ENRICH.sessions){
+    const hay=(s.chapter_title+' '+s.summary+' '+s.key_events.join(' ')+' '+(s.locations||[]).join(' ')).toLowerCase();
+    let hits=0; for(const k of kws){ if(hay.includes(k)) hits++; }
+    if(hits>0) out.push({s,hits});
+  }
+  out.sort((a,b)=>b.hits-a.hits);
+  return out.slice(0,3).map(o=>o.s);
+}
+
+/* ---------- three.js scene ---------- */
+const canvas=document.getElementById('scene');
+const renderer=new THREE.WebGLRenderer({canvas,antialias:true});
+renderer.setPixelRatio(Math.min(devicePixelRatio,2));
+const scene=new THREE.Scene();
+scene.background=new THREE.Color(0x0b0e1a);
+scene.fog=new THREE.FogExp2(0x0b0e1a,0.016);
+const camera=new THREE.PerspectiveCamera(55,1,0.1,600);
+
+scene.add(new THREE.AmbientLight(0x445577,0.9));
+const moon=new THREE.DirectionalLight(0xaabbff,0.7); moon.position.set(-40,80,-30); scene.add(moon);
+const warm=new THREE.PointLight(0xd4af6a,0.8,60); scene.add(warm);
+
+/* path: winding road through the events */
+const SPACING=11;
+const pathPts=[];
+for(let i=0;i<N;i++){
+  const t=i/(N-1);
+  const x=Math.sin(i*0.35)*16 + Math.sin(i*0.11)*24;
+  const y=Math.sin(i*0.18)*2.2 + 2.5;
+  const z=-i*SPACING;
+  pathPts.push(new THREE.Vector3(x,y,z));
+}
+const curve=new THREE.CatmullRomCurve3(pathPts,false,'catmullrom',0.4);
+
+/* road ribbon */
+{
+  const tube=new THREE.Mesh(
+    new THREE.TubeGeometry(curve,N*6,0.45,10,false),
+    new THREE.MeshStandardMaterial({color:0xd4af6a,emissive:0x9a7a3a,emissiveIntensity:0.55,roughness:0.5})
+  );
+  scene.add(tube);
+  const glow=new THREE.Mesh(
+    new THREE.TubeGeometry(curve,N*6,1.1,10,false),
+    new THREE.MeshBasicMaterial({color:0xd4af6a,transparent:true,opacity:0.07})
+  );
+  scene.add(glow);
+}
+
+/* ground */
+{
+  const g=new THREE.PlaneGeometry(900,N*SPACING+300,60,180);
+  const pos=g.attributes.position;
+  for(let i=0;i<pos.count;i++){
+    const x=pos.getX(i), y=pos.getY(i);
+    pos.setZ(i, Math.sin(x*0.05)*Math.cos(y*0.03)*3 + Math.sin(x*0.11+y*0.07)*1.5);
+  }
+  g.computeVertexNormals();
+  const ground=new THREE.Mesh(g,new THREE.MeshStandardMaterial({color:0x101830,roughness:1}));
+  ground.rotation.x=-Math.PI/2; ground.position.set(0,-1.5,-N*SPACING/2);
+  scene.add(ground);
+}
+
+/* stars */
+{
+  const sg=new THREE.BufferGeometry(); const v=[];
+  for(let i=0;i<1600;i++){
+    const r=280+Math.random()*120, a=Math.random()*Math.PI*2, h=Math.random()*220-20;
+    v.push(Math.cos(a)*r, h, -N*SPACING/2+Math.sin(a)*r*2);
+  }
+  sg.setAttribute('position',new THREE.Float32BufferAttribute(v,3));
+  scene.add(new THREE.Points(sg,new THREE.PointsMaterial({color:0xcdd6ff,size:0.9,sizeAttenuation:true,transparent:true,opacity:0.8})));
+}
+
+/* text sprite helper */
+function textSprite(text,{size=44,color='#e8e4d8',bg=null,pad=14}={}){
+  const c=document.createElement('canvas'), ctx=c.getContext('2d');
+  ctx.font=`${size}px Georgia`;
+  const w=ctx.measureText(text).width;
+  c.width=w+pad*2; c.height=size+pad*2;
+  ctx.font=`${size}px Georgia`;
+  if(bg){ctx.fillStyle=bg;ctx.beginPath();ctx.roundRect(0,0,c.width,c.height,14);ctx.fill();}
+  ctx.fillStyle=color; ctx.textBaseline='middle';
+  ctx.fillText(text,pad,c.height/2);
+  const tex=new THREE.CanvasTexture(c); tex.minFilter=THREE.LinearFilter;
+  const sp=new THREE.Sprite(new THREE.SpriteMaterial({map:tex,transparent:true,depthWrite:false}));
+  const s=0.028;
+  sp.scale.set(c.width*s,c.height*s,1);
+  return sp;
+}
+
+/* event markers */
+const markers=[]; // {mesh,label,ev,idx,pos}
+const pickables=[];
+const geoByType={
+  location:new THREE.ConeGeometry(0.9,2.2,6),
+  event:new THREE.SphereGeometry(0.75,16,12),
+  encounter:new THREE.OctahedronGeometry(0.95),
+  travel:new THREE.SphereGeometry(0.55,12,10)
+};
+let lastMonth=null;
+for(let i=0;i<N;i++){
+  const ev=EVENTS[i];
+  const t=i/(N-1);
+  const p=curve.getPointAt(t);
+  const tangent=curve.getTangentAt(t);
+  const side=new THREE.Vector3().crossVectors(tangent,new THREE.Vector3(0,1,0)).normalize();
+  const off=(i%2===0?1:-1)*(2.6+(i%3)*0.5);
+  const isNow=ev.color==='#ff0066';
+  const color=isNow?0xff0066:(TYPE_COLOR[ev.type]||0x1fb3a5);
+  const m=new THREE.Mesh(
+    ev.type==='location'?geoByType.location:geoByType[ev.type]||geoByType.event,
+    new THREE.MeshStandardMaterial({color,emissive:color,emissiveIntensity:0.45,roughness:0.4})
+  );
+  m.position.copy(p).addScaledVector(side,off);
+  m.position.y=p.y+1.6;
+  if(ev.type==='location') m.position.y+=0.5;
+  scene.add(m);
+  // stem
+  const stem=new THREE.Mesh(new THREE.CylinderGeometry(0.05,0.05,m.position.y+1.5),
+    new THREE.MeshBasicMaterial({color:0x38405f}));
+  stem.position.set(m.position.x,(m.position.y-1.5)/2,m.position.z);
+  scene.add(stem);
+  // label
+  const short=ev.title.length>26?ev.title.slice(0,25)+'…':ev.title;
+  const lab=textSprite(short,{size:38,color:isNow?'#ff7eb2':'#e8e4d8',bg:'rgba(11,14,26,0.72)'});
+  lab.position.copy(m.position); lab.position.y+=2.1;
+  scene.add(lab);
+  m.userData={idx:i};
+  markers.push({mesh:m,label:lab,ev,idx:i,pos:m.position.clone()});
+  pickables.push(m);
+  // month gates
+  const mo=monthOf(ev.date);
+  if(mo && mo!==lastMonth){
+    lastMonth=mo;
+    const gate=textSprite(`— ${mo} ${yearOf(ev.date)} —`,{size:52,color:'#d4af6a'});
+    gate.position.set(p.x,p.y+7.5,p.z);
+    scene.add(gate);
+  }
+  if(isNow){
+    const halo=new THREE.Mesh(new THREE.RingGeometry(1.4,1.8,32),
+      new THREE.MeshBasicMaterial({color:0xff0066,transparent:true,opacity:0.6,side:THREE.DoubleSide}));
+    halo.position.copy(m.position); halo.rotation.x=-Math.PI/2;
+    scene.add(halo);
+    m.userData.halo=halo;
+  }
+}
+
+/* ---------- camera travel ---------- */
+let progress=0, targetProgress=0;      // 0..1 along curve
+let yaw=0, pitch=0, tYaw=0, tPitch=0;  // look around
+let dragging=false, px=0, py=0;
+
+function clamp(v,a,b){return Math.max(a,Math.min(b,v))}
+addEventListener('wheel',e=>{
+  if(overlayOpen()) return;
+  targetProgress=clamp(targetProgress + e.deltaY*0.00012,0,1);
+},{passive:true});
+addEventListener('keydown',e=>{
+  if(overlayOpen()) return;
+  if(e.key==='ArrowUp'||e.key==='w') targetProgress=clamp(targetProgress+0.008,0,1);
+  if(e.key==='ArrowDown'||e.key==='s') targetProgress=clamp(targetProgress-0.008,0,1);
+  if(e.key==='ArrowRight') stepEvent(1);
+  if(e.key==='ArrowLeft') stepEvent(-1);
+  if(e.key==='Escape'){closeCard();closeOverlay();}
+});
+canvas.addEventListener('pointerdown',e=>{dragging=true;px=e.clientX;py=e.clientY;moved=0;});
+let moved=0;
+addEventListener('pointermove',e=>{
+  // tooltip hover
+  hover(e);
+  if(!dragging) return;
+  const dx=e.clientX-px, dy=e.clientY-py; px=e.clientX; py=e.clientY;
+  moved+=Math.abs(dx)+Math.abs(dy);
+  tYaw=clamp(tYaw-dx*0.003,-1.2,1.2);
+  tPitch=clamp(tPitch-dy*0.002,-0.5,0.6);
+});
+addEventListener('pointerup',()=>{dragging=false;});
+
+/* touch: vertical swipe = travel */
+let lastTouchY=null;
+canvas.addEventListener('touchstart',e=>{if(e.touches.length===1)lastTouchY=e.touches[0].clientY;},{passive:true});
+canvas.addEventListener('touchmove',e=>{
+  if(e.touches.length===1&&lastTouchY!==null){
+    targetProgress=clamp(targetProgress+(lastTouchY-e.touches[0].clientY)*0.0006,0,1);
+    lastTouchY=e.touches[0].clientY;
+  }
+},{passive:true});
+
+/* raycasting */
+const ray=new THREE.Raycaster(); ray.params.Points={threshold:2};
+const mouse=new THREE.Vector2();
+const tip=document.getElementById('tip');
+function setMouse(e){ mouse.x=(e.clientX/innerWidth)*2-1; mouse.y=-(e.clientY/innerHeight)*2+1; }
+function pick(e){
+  setMouse(e); ray.setFromCamera(mouse,camera);
+  const hits=ray.intersectObjects(pickables,false);
+  return hits.length?hits[0].object:null;
+}
+function hover(e){
+  if(dragging){tip.style.display='none';return;}
+  const o=pick(e);
+  if(o){
+    const ev=EVENTS[o.userData.idx];
+    tip.querySelector('.d').textContent=ev.date||'';
+    tip.querySelector('.t').textContent=ev.title;
+    tip.style.display='block';
+    tip.style.left=(e.clientX+14)+'px'; tip.style.top=(e.clientY+10)+'px';
+    canvas.style.cursor='pointer';
+  } else { tip.style.display='none'; canvas.style.cursor='grab'; }
+}
+canvas.addEventListener('click',e=>{
+  if(moved>6) return;
+  const o=pick(e);
+  if(o) openEvent(o.userData.idx,true);
+});
+
+/* ---------- detail card ---------- */
+const card=document.getElementById('card');
+let currentIdx=null;
+function openEvent(idx,fly){
+  currentIdx=idx;
+  const ev=EVENTS[idx];
+  document.getElementById('cDate').textContent=ev.date||'дата неизвестна';
+  document.getElementById('cTitle').textContent=ev.title;
+  document.getElementById('cLoc').textContent=ev.location?('📍 '+ev.location):'';
+  const b=document.getElementById('cBadge');
+  const isNow=ev.color==='#ff0066';
+  b.textContent=isNow?'Текущая позиция':(TYPE_NAME[ev.type]||ev.type);
+  const cc=isNow?'#ff0066':(TYPE_CSS[ev.type]||'#1fb3a5');
+  b.style.color=cc; b.style.borderColor=cc;
+  const body=document.getElementById('cBody');
+  let html='';
+  const rel=relatedSessions(ev);
+  if(rel.length){
+    html+='<h3>Возможно, из этих глав</h3>';
+    for(const s of rel){
+      html+=`<div class="sess" onclick="openSessions(${s.n})"><span class="sn">Сессия ${s.n} · ${s.date}</span><br><b>${esc(s.chapter_title)}</b></div>`;
+    }
+  } else {
+    html+='<p class="sum">Прямых совпадений с главами не нашлось — событие сохранилось на карте странствий Линзи.</p>';
+  }
+  body.innerHTML=html;
+  card.classList.add('show');
+  if(fly) targetProgress=idx/(N-1);
+}
+function closeCard(){card.classList.remove('show');currentIdx=null;}
+function stepEvent(d){
+  let i=currentIdx===null?Math.round(targetProgress*(N-1)):currentIdx;
+  i=clamp(i+d,0,N-1);
+  openEvent(i,true);
+}
+function esc(s){return String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]))}
+
+/* ---------- scrubber ---------- */
+const scrub=document.getElementById('scrub');
+const fill=scrub.querySelector('.fill'), knob=scrub.querySelector('.knob');
+{
+  const mBox=scrub.querySelector('.months');
+  let lm=null;
+  for(let i=0;i<N;i++){
+    const mo=monthOf(EVENTS[i].date);
+    if(mo&&mo!==lm){
+      lm=mo;
+      const el=document.createElement('div');
+      el.className='mt'; el.style.left=(i/(N-1)*100)+'%';
+      el.innerHTML=`${mo.slice(0,3)}<i></i>`;
+      mBox.appendChild(el);
+    }
+  }
+}
+function scrubTo(e){
+  const r=scrub.getBoundingClientRect();
+  targetProgress=clamp((e.clientX-r.left)/r.width,0,1);
+}
+scrub.addEventListener('pointerdown',e=>{scrubTo(e);
+  const mv=ev=>scrubTo(ev), up=()=>{removeEventListener('pointermove',mv);removeEventListener('pointerup',up);};
+  addEventListener('pointermove',mv); addEventListener('pointerup',up);
+});
+
+/* ---------- overlays ---------- */
+const overlay=document.getElementById('overlay');
+const ovContent=document.getElementById('ovContent');
+function overlayOpen(){return overlay.classList.contains('show')}
+function closeOverlay(){overlay.classList.remove('show');setTab('road');}
+function setTab(t){document.querySelectorAll('.tab').forEach(b=>b.classList.toggle('on',b.dataset.t===t));}
+document.querySelectorAll('.tab').forEach(b=>b.addEventListener('click',()=>{
+  const t=b.dataset.t; setTab(t);
+  if(t==='road') closeOverlay();
+  else if(t==='sessions') openSessions();
+  else openNpcs();
+}));
+
+function sessionCard(s){
+  const npcs=(s.npcs_met||[]).slice(0,10).map(n=>`<span class="chip npc">${esc(n)}</span>`).join('');
+  const locs=(s.locations||[]).slice(0,6).map(l=>`<span class="chip loc">${esc(l)}</span>`).join('');
+  const evs=(s.key_events||[]).map(e=>`<li>${esc(e)}</li>`).join('');
+  return `<div class="scard" id="sess-${s.n}">
+    <div class="top"><span class="sn">СЕССИЯ ${s.n}</span><h3>${esc(s.chapter_title)}</h3>${s.rec?'<span class="chip" style="border-color:rgba(212,175,106,.45);color:var(--gold)">реконструкция</span>':''}<span class="rd">${s.date}</span></div>
+    <p>${esc(s.summary)}</p>
+    ${evs?`<details><summary>Ключевые события</summary><ul>${evs}</ul></details>`:''}
+    <div class="tags">${npcs}${locs}</div>
+  </div>`;
+}
+function openSessions(focusN){
+  setTab('sessions');
+  let html=`<h2>Сессии кампании</h2>
+  <div class="osub">хроники Линзи, сессии ${ENRICH.sessions[0].n}–${ENRICH.sessions[ENRICH.sessions.length-1].n} · ${ENRICH.sessions.length} записей</div>
+  <input id="search" placeholder="Поиск: имя, место, событие…" oninput="filterSessions(this.value)">
+  <div id="sessList">`;
+  for(const s of ENRICH.sessions) html+=sessionCard(s);
+  html+='</div>';
+  ovContent.innerHTML=html;
+  overlay.classList.add('show');
+  if(focusN){
+    const el=document.getElementById('sess-'+focusN);
+    if(el){el.scrollIntoView();el.style.borderColor='var(--gold)';}
+  } else overlay.scrollTop=0;
+}
+function filterSessions(q){
+  q=q.toLowerCase().trim();
+  for(const s of ENRICH.sessions){
+    const el=document.getElementById('sess-'+s.n);
+    if(!el) continue;
+    const hay=(s.chapter_title+' '+s.summary+' '+(s.npcs_met||[]).join(' ')+' '+(s.key_events||[]).join(' ')+' '+(s.locations||[]).join(' ')).toLowerCase();
+    el.style.display=(!q||hay.includes(q))?'':'none';
+  }
+}
+function openNpcs(){
+  setTab('npcs');
+  const names=Object.keys(ENRICH.npc_index).sort((a,b)=>ENRICH.npc_index[a].first_session-ENRICH.npc_index[b].first_session);
+  let html=`<h2>Кого мы встретили</h2>
+  <div class="osub">важнейшие лица кампании — по порядку знакомства · ${names.length} записей</div>`;
+  for(const n of names){
+    const x=ENRICH.npc_index[n];
+    html+=`<div class="ncard"><b>${esc(n)}</b><span class="fs">с сессии ${x.first_session}</span><span>${esc(x.role||'')}</span></div>`;
+  }
+  ovContent.innerHTML=html;
+  overlay.classList.add('show');
+  overlay.scrollTop=0;
+}
+
+/* ---------- render loop ---------- */
+function resize(){
+  renderer.setSize(innerWidth,innerHeight,false);
+  camera.aspect=innerWidth/innerHeight; camera.updateProjectionMatrix();
+}
+addEventListener('resize',resize); resize();
+
+const up=new THREE.Vector3(0,1,0);
+let clock=new THREE.Clock();
+function animate(){
+  requestAnimationFrame(animate);
+  const dt=clock.getDelta(), el=clock.elapsedTime;
+  progress+=(targetProgress-progress)*Math.min(1,dt*4);
+  yaw+=(tYaw-yaw)*Math.min(1,dt*6);
+  pitch+=(tPitch-pitch)*Math.min(1,dt*6);
+
+  const t=clamp(progress,0,0.999);
+  const p=curve.getPointAt(t);
+  const ahead=curve.getPointAt(Math.min(t+0.008,1));
+  const dir=ahead.clone().sub(p).normalize();
+  const camPos=p.clone().addScaledVector(dir,-9).add(new THREE.Vector3(0,5.5,0));
+  camera.position.lerp(camPos,Math.min(1,dt*5));
+  const look=p.clone().addScaledVector(dir,14);
+  look.y+=2;
+  // apply look-around
+  const q=new THREE.Quaternion().setFromAxisAngle(up,yaw);
+  const offset=look.clone().sub(camera.position).applyQuaternion(q);
+  offset.y+=pitch*18;
+  camera.lookAt(camera.position.clone().add(offset));
+
+  warm.position.copy(p).add(new THREE.Vector3(0,6,0));
+
+  // marker animation + label distance fade
+  for(const m of markers){
+    const d=camera.position.distanceTo(m.pos);
+    m.label.material.opacity=clamp(1.6-d/45,0,1);
+    m.label.visible=d<80;
+    m.mesh.rotation.y=el*0.6;
+    if(m.mesh.userData.halo){ m.mesh.userData.halo.scale.setScalar(1+Math.sin(el*3)*0.15); }
+  }
+  fill.style.width=(progress*100)+'%';
+  knob.style.left=(progress*100)+'%';
+  renderer.render(scene,camera);
+}
+animate();
+setTimeout(()=>{const l=document.getElementById('loading');l.style.opacity=0;setTimeout(()=>l.remove(),900);},700);
+
+/* roundRect polyfill for older canvas */
+if(!CanvasRenderingContext2D.prototype.roundRect){
+  CanvasRenderingContext2D.prototype.roundRect=function(x,y,w,h,r){
+    this.beginPath();this.moveTo(x+r,y);this.arcTo(x+w,y,x+w,y+h,r);this.arcTo(x+w,y+h,x,y+h,r);
+    this.arcTo(x,y+h,x,y,r);this.arcTo(x,y,x+w,y,r);this.closePath();return this;};
+}
+</script>
+</body>
+</html>
