@@ -32,7 +32,7 @@
   #filterPanel.show{display:block}
   .fp-title{color:var(--gold);font-size:14px;letter-spacing:.06em;margin-bottom:10px}
   .fp-sec{color:var(--muted);font-size:11px;letter-spacing:.1em;text-transform:uppercase;margin:12px 0 6px}
-  #fpThreads{display:flex;flex-wrap:wrap;gap:6px}
+  #fpThreads,#fpNpcs{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px}
   #fpNpc{width:100%;background:rgba(11,14,26,.6);border:1px solid var(--border);color:var(--ink);
     padding:8px 12px;border-radius:10px;font-family:inherit;font-size:13px;outline:none}
   #fpReset{margin-top:12px;width:100%;background:rgba(212,175,106,.1);border:1px solid var(--border);
@@ -90,6 +90,11 @@
   #card .loc{color:var(--muted);font-size:13px;font-style:italic;margin-bottom:10px}
   .badge{display:inline-block;font-size:11px;padding:2px 10px;border-radius:10px;margin:0 6px 8px 0;
     border:1px solid;letter-spacing:.05em}
+  .badge.clk{cursor:pointer;transition:.15s}
+  .badge.clk:hover{background:rgba(212,175,106,.15)}
+  .badge.on{background:rgba(212,175,106,.25);box-shadow:0 0 8px rgba(212,175,106,.4)}
+  .badge.dis{opacity:.35;cursor:default}
+  .badge.dis:hover{background:none}
   #card h3{font-size:13px;color:var(--gold);margin:14px 0 6px;letter-spacing:.06em;text-transform:uppercase;font-weight:normal}
   #card .sess{border:1px solid rgba(255,255,255,.08);border-radius:10px;padding:10px 12px;margin-bottom:8px;
     cursor:pointer;transition:.2s;font-size:13px}
@@ -215,8 +220,9 @@
   <div class="fp-title">✨ Подсветить на небе</div>
   <div class="fp-sec">Квесты и нити</div>
   <div id="fpThreads"></div>
-  <div class="fp-sec">Персонаж / NPC</div>
-  <input id="fpNpc" list="npcList" placeholder="Начни вводить имя…">
+  <div class="fp-sec">Персонажи и NPC</div>
+  <div id="fpNpcs"></div>
+  <input id="fpNpc" list="npcList" placeholder="…или введи любое имя">
   <datalist id="npcList"></datalist>
   <button id="fpReset">Сбросить подсветку</button>
 </div>
@@ -377,6 +383,9 @@ const evNpcs=EVENTS.map((ev,i)=>{
   for(const n of evRel[i]){const s=sessByN[n];if(s)(s.npcs_met||[]).forEach(x=>set.add(x));}
   return set;
 });
+const thrEvCount={},npcEvCount={};
+evThreads.forEach(s=>s.forEach(t=>thrEvCount[t]=(thrEvCount[t]||0)+1));
+evNpcs.forEach(s=>s.forEach(n=>npcEvCount[n]=(npcEvCount[n]||0)+1));
 const filter={kind:null,val:null,name:''};
 function evMatch(i){
   if(!filter.kind)return true;
@@ -624,23 +633,33 @@ function setFilter(kind,val,name){
   filter.kind=kind;filter.val=val;filter.name=name||val||'';
   state.thread=(kind==='thread')?val:null;
   document.querySelectorAll('#fpThreads .tchip').forEach(c=>c.classList.toggle('on',kind==='thread'&&c.dataset.th===val));
+  document.querySelectorAll('#fpNpcs .tchip').forEach(c=>c.classList.toggle('on',kind==='npc'&&c.dataset.np===val));
   document.getElementById('fpNpc').value=kind==='npc'?val:'';
   document.querySelectorAll('.evRow').forEach(r=>{
     r.classList.toggle('dim',!!filter.kind&&!evMatch(+r.dataset.i));
   });
   document.querySelectorAll('#threadBar .tchip').forEach(c=>c.classList.toggle('on',kind==='thread'&&c.dataset.th===val));
+  if(currentIdx!==null&&card.classList.contains('show'))openEvent(currentIdx,false,false);
 }
 {
   const box=document.getElementById('fpThreads');
   const tids=Object.keys(ENRICH.threads||{}).sort((a,b)=>ENRICH.threads[b].sessions.length-ENRICH.threads[a].sessions.length);
-  box.innerHTML=tids.map(t=>'<button class="tchip" data-th="'+esc(t)+'">'+esc(ENRICH.threads[t].name)+'</button>').join('');
+  box.innerHTML=tids.map(t=>{
+    const c=thrEvCount[t]||0;
+    return '<button class="tchip'+(c<2?'" disabled style="opacity:.35':'')+'" data-th="'+esc(t)+'">'+esc(ENRICH.threads[t].name)+' · '+c+'</button>';
+  }).join('');
   box.querySelectorAll('.tchip').forEach(c=>c.addEventListener('click',()=>setFilter('thread',c.dataset.th)));
+  const nbox=document.getElementById('fpNpcs');
+  const topNpc=Object.keys(npcEvCount).filter(n=>npcEvCount[n]>=2)
+    .sort((a,b)=>npcEvCount[b]-npcEvCount[a]).slice(0,24);
+  nbox.innerHTML=topNpc.map(n=>'<button class="tchip" data-np="'+esc(n)+'">'+esc(n)+' · '+npcEvCount[n]+'</button>').join('');
+  nbox.querySelectorAll('.tchip').forEach(c=>c.addEventListener('click',()=>setFilter('npc',c.dataset.np)));
   const dl=document.getElementById('npcList');
-  dl.innerHTML=Object.keys(ENRICH.npc_index).map(n=>'<option value="'+esc(n)+'">').join('');
+  dl.innerHTML=Object.keys(npcEvCount).filter(n=>npcEvCount[n]>=2).map(n=>'<option value="'+esc(n)+'">').join('');
   const inp=document.getElementById('fpNpc');
   inp.addEventListener('change',()=>{
     const v=inp.value.trim();
-    if(ENRICH.npc_index[v])setFilter('npc',v);
+    if(npcEvCount[v]>=2)setFilter('npc',v);
   });
   document.getElementById('fpReset').addEventListener('click',()=>setFilter(null,null));
 }
@@ -712,13 +731,31 @@ document.querySelectorAll('.tab').forEach(b=>b.addEventListener('click',()=>{
 /* ---------- карточка события ---------- */
 const card=document.getElementById('card');
 let currentIdx=null;
+function tagBadge(kind,val,label,count){
+  const active=filter.kind===kind&&filter.val===val;
+  const dis=count<2;
+  const cls='badge '+(dis?'dis':'clk')+(active?' on':'');
+  const attr=dis?'':` onclick="setFilter('${kind}','${esc(val).replace(/'/g,'&#39;')}')"`;
+  const ttl=dis?' title="встречается только здесь"':` title="подсветить на линии (${count})"`;
+  return `<span class="${cls}" style="color:var(--gold);border-color:var(--border)"${attr}${ttl}>${esc(label)}${dis?'':' · '+count}</span>`;
+}
 function threadBadges(i){
   let html='';
   for(const t of evThreads[i]){
     const th=(ENRICH.threads||{})[t];
-    if(th)html+=`<span class="badge" style="color:var(--gold);border-color:var(--border)">${esc(th.name)}</span>`;
+    if(th)html+=tagBadge('thread',t,th.name,thrEvCount[t]||0);
   }
   return html;
+}
+function npcBadges(i){
+  const arr=[...evNpcs[i]].sort((a,b)=>(npcEvCount[b]||0)-(npcEvCount[a]||0)).slice(0,8);
+  return arr.map(n=>{
+    const active=filter.kind==='npc'&&filter.val===n;
+    const c=npcEvCount[n]||0,dis=c<2;
+    const cls='badge '+(dis?'dis':'clk')+(active?' on':'');
+    const attr=dis?'':` onclick="setFilter('npc','${esc(n).replace(/'/g,'&#39;')}')"`;
+    return `<span class="${cls}" style="color:var(--teal);border-color:rgba(31,179,165,.4)"${attr}>${esc(n)}${dis?'':' · '+c}</span>`;
+  }).join('');
 }
 function openEvent(idx,fly,pushHash=true){
   currentIdx=idx;
@@ -730,7 +767,8 @@ function openEvent(idx,fly,pushHash=true){
   const isNow=ev.color==='#ff0066';
   const cc=isNow?'#ff0066':(TYPE_CSS[ev.type]||'#1fb3a5');
   document.getElementById('cBadges').innerHTML=
-    `<span class="badge" style="color:${cc};border-color:${cc}">${isNow?'Текущая позиция':(TYPE_NAME[ev.type]||ev.type)}</span>`+threadBadges(idx);
+    `<span class="badge" style="color:${cc};border-color:${cc}">${isNow?'Текущая позиция':(TYPE_NAME[ev.type]||ev.type)}</span>`
+    +threadBadges(idx)+npcBadges(idx);
   let html='';
   const rel=evRel[idx].map(n=>sessByN[n]).filter(Boolean);
   if(rel.length){
