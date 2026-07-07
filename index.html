@@ -645,6 +645,7 @@ addEventListener('keydown',e=>{
 /* ---------- панель фильтра ---------- */
 const fpanel=document.getElementById('filterPanel');
 document.getElementById('filterBtn').addEventListener('click',()=>{
+  if(state.view!=='road')showView('road');
   fpanel.classList.toggle('show');
   document.getElementById('filterBtn').classList.toggle('on',fpanel.classList.contains('show'));
 });
@@ -722,6 +723,7 @@ function showView(v){
 }
 document.querySelectorAll('.tab').forEach(b=>b.addEventListener('click',()=>{
   const t=b.dataset.t;
+  if(!t)return; // кнопки без data-t (напр. ✨) — со своими обработчиками
   if(t==='road')showView('road');
   else if(t==='lenta')showView('lenta');
   else if(t==='sessions')openSessions();
