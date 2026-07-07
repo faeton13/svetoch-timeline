@@ -656,7 +656,20 @@ function draw(ts){
   }
   // сессии-звёзды
   ctx.textAlign='center';
-  let lastLabEnd=-1e9;
+  const sessPlaced=[];
+  function sessSlot(cx,y,w){
+    const x1=cx-w/2,x2=cx+w/2;
+    for(let b=0;b<4;b++){
+      let clash=false;
+      for(const q of sessPlaced){
+        if(x1<q.x2+10&&x2>q.x1-10&&Math.abs(q.y-y)<13){clash=true;break;}
+      }
+      if(!clash)break;
+      y+=14;
+    }
+    sessPlaced.push({x1,x2,y});
+    return y;
+  }
   for(let k=0;k<SN;k++){
     const wx=sxOf(k);
     const X=sx(wx);if(X<-120||X>innerWidth+120)continue;
@@ -684,17 +697,15 @@ function draw(ts){
       ctx.beginPath();ctx.arc(X,Y,R+7+2*Math.sin(t2*1.5),0,7);ctx.stroke();
       ctx.globalAlpha=1;
     }
-    // подпись сессии
+    // подпись сессии: при наложении — строкой ниже
     const lab=view.zoom>0.22?('S'+s.n+' · '+String(info.chapter_title||'').slice(0,view.zoom>0.6?46:24)):('S'+s.n);
     ctx.font=(view.zoom>0.6?13:11.5)+'px Georgia';
     const w=ctx.measureText(lab).width;
-    if(X-w/2>lastLabEnd+12){
-      ctx.globalAlpha=a;
-      ctx.fillStyle=isNow?'#ff7eb2':'rgba(212,175,106,0.95)';
-      ctx.fillText(lab,X,Y+R+18);
-      lastLabEnd=X+w/2;
-      ctx.globalAlpha=1;
-    }
+    const ly=sessSlot(X,Y+R+18,w);
+    ctx.globalAlpha=a;
+    ctx.fillStyle=isNow?'#ff7eb2':'rgba(212,175,106,0.95)';
+    ctx.fillText(lab,X,ly);
+    ctx.globalAlpha=1;
   }
   // арки
   {
