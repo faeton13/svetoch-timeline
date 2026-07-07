@@ -28,12 +28,10 @@ header .sub{font-style:italic;color:var(--faded);margin-top:6px;font-size:14px}
 header a{color:var(--seal);font-size:13px;text-decoration:none;border:1px solid rgba(140,47,34,.4);
   border-radius:14px;padding:4px 14px;display:inline-block;margin-top:14px}
 header a:hover{background:rgba(140,47,34,.08)}
-.road{position:absolute;top:150px;bottom:70px;left:50%;width:14px;transform:translateX(-50%);
-  background:repeating-linear-gradient(180deg,var(--road) 0 26px,#7a6038 26px 30px);
-  border-left:2px solid rgba(58,44,24,.5);border-right:2px solid rgba(58,44,24,.5);
-  border-radius:7px;z-index:0}
-.road::before{content:'';position:absolute;left:50%;top:0;bottom:0;width:2px;transform:translateX(-50%);
-  background:repeating-linear-gradient(180deg,#f2e6c8 0 14px,transparent 14px 30px)}
+#roadSvg{position:absolute;inset:0;z-index:0;pointer-events:none}
+.lead{position:absolute;height:3px;background:var(--road);opacity:.8;z-index:0;border-radius:2px}
+.rknot{position:absolute;width:15px;height:15px;border-radius:50%;z-index:1;
+  background:radial-gradient(circle at 35% 35%,#c9a55f,#8a6f45);border:2px solid #5c4626}
 #flora{position:absolute;inset:0;z-index:0;pointer-events:none;overflow:hidden}
 .fl{position:absolute;filter:sepia(1) saturate(.35) brightness(.72) contrast(1.05);
   text-shadow:0 1px 0 rgba(58,44,24,.15)}
@@ -51,20 +49,31 @@ header a:hover{background:rgba(140,47,34,.08)}
 .card.vis{opacity:1;transform:none}
 .card.l{margin-right:auto;margin-left:26px;rotate:-.4deg}
 .card.r{margin-left:auto;margin-right:26px;rotate:.4deg}
-.card::after{content:'';position:absolute;top:26px;width:42px;height:3px;background:var(--road)}
-.card.l::after{right:-44px}
-.card.r::after{left:-44px}
-.knot{position:absolute;top:20px;width:15px;height:15px;border-radius:50%;
-  background:radial-gradient(circle at 35% 35%,#c9a55f,#8a6f45);border:2px solid #5c4626}
-.card.l .knot{right:-60px}
-.card.r .knot{left:-60px}
+.knot{display:none}
 .sn{color:var(--seal);font-size:12px;letter-spacing:.12em}
 .rd{float:right;color:var(--faded);font-size:12px}
 h3{font-size:17.5px;font-weight:normal;margin:6px 0 8px;line-height:1.3}
 p.sum{font-size:13.5px;line-height:1.55;color:#4c3c22}
 .meds{display:flex;gap:10px;margin-top:12px;flex-wrap:wrap}
 .med{display:flex;align-items:center;gap:8px;background:rgba(255,252,240,.55);
-  border:1px solid rgba(110,85,45,.4);border-radius:30px;padding:4px 12px 4px 5px;font-size:12px;line-height:1.25}
+  border:1px solid rgba(110,85,45,.4);border-radius:30px;padding:4px 12px 4px 5px;font-size:12px;line-height:1.25;
+  cursor:pointer;transition:.15s}
+.med:hover{border-color:var(--seal);background:rgba(255,252,240,.85)}
+#lb{position:fixed;inset:0;z-index:50;background:rgba(20,14,6,.82);display:none;
+  align-items:center;justify-content:center;padding:20px}
+#lb.show{display:flex}
+#lbCard{max-width:520px;width:100%;max-height:92vh;overflow-y:auto;
+  background:linear-gradient(160deg,var(--card),var(--card2));border-radius:8px;padding:22px;
+  box-shadow:0 20px 60px rgba(0,0,0,.7), inset 0 0 40px rgba(150,115,55,.12);
+  border:1px solid rgba(110,85,45,.5);position:relative}
+#lbClose{position:absolute;top:10px;right:14px;background:none;border:none;font-size:20px;
+  color:var(--faded);cursor:pointer;font-family:inherit}
+#lbImg{width:100%;max-height:56vh;object-fit:contain;border-radius:6px;display:none;
+  background:radial-gradient(circle at 50% 30%,#fff8e6,#d9c290);border:1px solid rgba(110,85,45,.4)}
+#lbGlyph{font-size:84px;text-align:center;display:none;padding:20px 0}
+#lbLab{color:var(--seal);font-size:11px;letter-spacing:.14em;margin-top:14px}
+#lbName{font-size:20px;margin:4px 0 8px;line-height:1.3}
+#lbNote{font-size:14px;line-height:1.55;color:#4c3c22}
 .med .g{width:32px;height:32px;flex:none;border-radius:50%;overflow:hidden;
   background:radial-gradient(circle at 35% 30%,#fff8e6,#d9c290);
   border:1px solid rgba(110,85,45,.5);display:flex;align-items:center;justify-content:center;font-size:17px}
@@ -93,8 +102,18 @@ p.sum{font-size:13.5px;line-height:1.55;color:#4c3c22}
   <div class="sub">кампания «Светоч» · летопись Линзи · 4710–4711 AR</div>
   <a href="index.html">✨ к звёздному небу</a>
 </header>
-<div class="road"></div>
+<svg id="roadSvg"></svg>
 <div id="flora"></div>
+<div id="lb" onclick="if(event.target===this)this.classList.remove('show')">
+  <div id="lbCard">
+    <button id="lbClose" onclick="document.getElementById('lb').classList.remove('show')">✕</button>
+    <img id="lbImg" alt="">
+    <div id="lbGlyph"></div>
+    <div id="lbLab"></div>
+    <h3 id="lbName"></h3>
+    <p id="lbNote"></p>
+  </div>
+</div>
 <div class="arc"><span>Путь в Украденные земли</span></div>
 <div class="card l"><span class="knot"></span>
 <span class="sn">СЕССИЯ 1</span><span class="rd">2025-01-29</span>
@@ -121,7 +140,7 @@ p.sum{font-size:13.5px;line-height:1.55;color:#4c3c22}
 <span class="sn">СЕССИЯ 4</span><span class="rd">2025-02-19</span>
 <h3>Destruction all around us (Разрушение вокруг нас)</h3>
 <p class="sum">Ночной налёт синдиката «Чёрные Слёзы» на поместье Алдори: дракон и синяя великаша-предводительница разносят замок, в тени пожара действуют ассасины. Герои спасают: некромантку от огра; прислугу от дракона; Амири и Валери в подвале (за изувеченным великаном, меч Амири при нём); встречают Харрима в горящем западном крыле; спасают эльфийку-к</p>
-<div class="meds"><span class="med boss"><span class="g"><img src="img/s4_frost-giant.webp" alt="" loading="lazy"></span><span><span class="lab">ПРОТИВНИК</span>Синяя великаша-предводительница</span></span></div>
+<div class="meds"><span class="med boss" data-lab="ПРОТИВНИК · СЕССИЯ 4" data-name="Синяя великаша-предводительница" data-note="Предводительница налёта Чёрных Слёз на поместье. В финале дракон уносит её с поля боя." data-glyph="⚔️" data-img="img/s4_frost-giant.webp"><span class="g"><img src="img/s4_frost-giant.webp" alt="" loading="lazy"></span><span><span class="lab">ПРОТИВНИК</span>Синяя великаша-предводительница</span></span></div>
 <div class="foot"><a href="chapters/s4.html">💬 Пересказ игроков</a><a href="index.html#road/s4">✨ на небе</a></div>
 </div>
 <div class="card l"><span class="knot"></span>
@@ -136,14 +155,14 @@ p.sum{font-size:13.5px;line-height:1.55;color:#4c3c22}
 <span class="sn">СЕССИЯ 6</span><span class="rd">2025-03-05</span>
 <h3>End of a long road (Конец долгой дороги — путь к посту Олега)</h3>
 <p class="sum">Прибытие на пост Олега. Сон Кроу №1: фигуристая женщина-дух земель просит остановить Рогача и друида.</p>
-<div class="meds"><span class="med boss"><span class="g"><img src="img/s6_happs-bydon.webp" alt="" loading="lazy"></span><span><span class="lab">ПРОТИВНИК</span>Хаппс</span></span></div>
+<div class="meds"><span class="med boss" data-lab="ПРОТИВНИК · СЕССИЯ 6" data-name="Хаппс" data-note="Текущий главарь бандитов Рогача у поста (раньше — Крессель). Убит в засаде; перед смертью обещает: «Крессель убьёт вас»." data-glyph="⚔️" data-img="img/s6_happs-bydon.webp"><span class="g"><img src="img/s6_happs-bydon.webp" alt="" loading="lazy"></span><span><span class="lab">ПРОТИВНИК</span>Хаппс</span></span></div>
 <div class="foot"><a href="chapters/s6.html">💬 Пересказ игроков</a><a href="index.html#road/s6">✨ на небе</a></div>
 </div>
 <div class="card l"><span class="knot"></span>
 <span class="sn">СЕССИЯ 7</span><span class="rd">2025-03-12</span>
 <h3>Entering the new world (Вход в новый мир — имена лошадям, кобольды)</h3>
 <p class="sum">Найдены кобольды, объевшиеся лунным редисом. Визит к Боккену: Тартуччио уже скупил все зелья и ушёл на юг.</p>
-<div class="meds"><span class="med boss"><span class="g"><img src="img/s7_nugrah.webp" alt="" loading="lazy"></span><span><span class="lab">ПРОТИВНИК</span>Курмиль (упомянут)</span></span></div>
+<div class="meds"><span class="med boss" data-lab="ПРОТИВНИК · СЕССИЯ 7" data-name="Курмиль (упомянут)" data-note="Брат Боккена, злой друид — пока только в рассказе Боккена. Столкновение — в S18." data-glyph="⚔️" data-img="img/s7_nugrah.webp"><span class="g"><img src="img/s7_nugrah.webp" alt="" loading="lazy"></span><span><span class="lab">ПРОТИВНИК</span>Курмиль (упомянут)</span></span></div>
 <div class="foot"><a href="chapters/s7.html">💬 Пересказ игроков</a><a href="index.html#road/s7">✨ на небе</a></div>
 </div>
 <div class="card r"><span class="knot"></span>
@@ -157,7 +176,7 @@ p.sum{font-size:13.5px;line-height:1.55;color:#4c3c22}
 <span class="sn">СЕССИЯ 9</span><span class="rd">2025-03-26</span>
 <h3>Mite infestation (Гремлины и кобольды)</h3>
 <p class="sum">Племя кобольдов Пепельная Чешуя: Стразор переименовывает его в «Дружину Беспределья из Кобольдов», выдаёт нашивки и заключает договор о слежке. Зачистка гигантского дерева гремлинов: бой с гремлинами наверху и внизу (пытали кобольдов), спасение Мик-Мэка, гремлин-наездник на пауке, бой с многоножкой (Кроу теряет сознание от яда), возврат р</p>
-<div class="meds"><span class="med boss"><span class="g"><img src="img/s9_tartuk.webp" alt="" loading="lazy"></span><span><span class="lab">ПРОТИВНИК</span>Тартук</span></span></div>
+<div class="meds"><span class="med boss" data-lab="ПРОТИВНИК · СЕССИЯ 9" data-name="Тартук" data-note="Шаман-вождь кобольдов Рудника Октоп. Соглашается отдать пленного Харрима в обмен на реликвию, но отказывается прекратить нападения на людей («это наши земли»)." data-glyph="🦎" data-img="img/s9_tartuk.webp"><span class="g"><img src="img/s9_tartuk.webp" alt="" loading="lazy"></span><span><span class="lab">ПРОТИВНИК</span>Тартук</span></span></div>
 <div class="foot"><a href="chapters/s9.html">💬 Пересказ игроков</a><a href="index.html#road/s9">✨ на небе</a></div>
 </div>
 <div class="card r"><span class="knot"></span>
@@ -171,14 +190,14 @@ p.sum{font-size:13.5px;line-height:1.55;color:#4c3c22}
 <span class="sn">СЕССИЯ 11</span><span class="rd">2025-04-16</span>
 <h3>Where did the road take us? (Технолига)</h3>
 <p class="sum">На юге компас Каэлума показывает «друзья рядом»: найден лагерь — наёмники, 2 технолиговца и пленница-андроид с такими же татуировками, как у Каэлума. При поиске лагеря бандитов на севере найден повреждённый алтарь Дезны — Кроу восстанавливает его.</p>
-<div class="meds"><span class="med boss"><span class="g">⚔️</span><span><span class="lab">ПРОТИВНИК</span>Калан</span></span></div>
+<div class="meds"><span class="med boss" data-lab="ПРОТИВНИК · СЕССИЯ 11" data-name="Калан" data-note="Командирша отряда Технолиги («женщина в странной броне, металл невиданный» по рассказу беглеца). Телепортируется из лагеря вместе с пленницей-андроидом до конца боя." data-glyph="⚔️"><span class="g">⚔️</span><span><span class="lab">ПРОТИВНИК</span>Калан</span></span></div>
 <div class="foot"><a href="chapters/s11.html">💬 Пересказ игроков</a><a href="index.html#road/s11">✨ на небе</a></div>
 </div>
 <div class="card r"><span class="knot"></span>
 <span class="sn">СЕССИЯ 12</span><span class="rd">2025-04-23</span>
 <h3>Hidden Temple, Crouching Bear (PR1ME-4, Регонгар, Октавия, Тристиан)</h3>
 <p class="sum">Через портал — штурм основного лагеря Технолиги (тренога, 3 турели, охрана). Компас Каэлума указывает на руку PR1ME-4 — там кибертатуировка.</p>
-<div class="meds"><span class="med boss"><span class="g">⚔️</span><span><span class="lab">ПРОТИВНИК</span>Калан</span></span></div>
+<div class="meds"><span class="med boss" data-lab="ПРОТИВНИК · СЕССИЯ 12" data-name="Калан" data-note="Командирша Технолиги. Взята и допрошена: лейтенант «Трёхпалый» — в ЮВ Нумерии; один из баронов дома Рогарвия сотрудничает с Нумерией (работорговля)." data-glyph="⚔️"><span class="g">⚔️</span><span><span class="lab">ПРОТИВНИК</span>Калан</span></span></div>
 <div class="foot"><a href="chapters/s12.html">💬 Пересказ игроков</a><a href="index.html#road/s12">✨ на небе</a></div>
 </div>
 <div class="arc"><span>Охота на Рогача</span></div>
@@ -186,7 +205,7 @@ p.sum{font-size:13.5px;line-height:1.55;color:#4c3c22}
 <span class="sn">СЕССИЯ 13</span><span class="rd">2025-05-08</span>
 <h3>One less trouble (Тристиан + Крессель + феи)</h3>
 <p class="sum">Завершён тяжёлый бой с медведем-аберрацией (Тристиан — клирик-целитель). Найден лагерь бандитов на платформах в деревьях; предводительница Крессель взята в плен.</p>
-<div class="meds"><span class="med boss"><span class="g"><img src="img/s13_kressle.webp" alt="" loading="lazy"></span><span><span class="lab">ПРОТИВНИК</span>Крессель</span></span></div>
+<div class="meds"><span class="med boss" data-lab="ПРОТИВНИК · СЕССИЯ 13" data-name="Крессель" data-note="Бандитка с двумя топорами, предводительница лагеря на платформах в деревьях. Взята в плен; на допросе раскрыла: Рогач в Клыководье (где пересекаются реки на юге)." data-glyph="⚔️" data-img="img/s13_kressle.webp"><span class="g"><img src="img/s13_kressle.webp" alt="" loading="lazy"></span><span><span class="lab">ПРОТИВНИК</span>Крессель</span></span></div>
 <div class="foot"><a href="chapters/s13.html">💬 Пересказ игроков</a><a href="index.html#road/s13">✨ на небе</a></div>
 </div>
 <div class="card r"><span class="knot"></span>
@@ -200,7 +219,7 @@ p.sum{font-size:13.5px;line-height:1.55;color:#4c3c22}
 <span class="sn">СЕССИЯ 15</span><span class="rd">2025-05-21</span>
 <h3>The Lord is Dead. Long live the Lord (Рогач убит)</h3>
 <p class="sum">Ожесточённая битва с бандитами в тылу форта. Рогач убит.</p>
-<div class="meds"><span class="med boss"><span class="g"><img src="img/s15_the-stag-lord.webp" alt="" loading="lazy"></span><span><span class="lab">ПРОТИВНИК</span>Рогач (Stag Lord)</span></span></div>
+<div class="meds"><span class="med boss" data-lab="ПРОТИВНИК · СЕССИЯ 15" data-name="Рогач (Stag Lord)" data-note="Главарь бандитской сети Зелёного Пояса. Убит при штурме форта «после долгого пути через кровь, болота и ложь»." data-glyph="🏴" data-img="img/s15_the-stag-lord.webp"><span class="g"><img src="img/s15_the-stag-lord.webp" alt="" loading="lazy"></span><span><span class="lab">ПРОТИВНИК</span>Рогач (Stag Lord)</span></span></div>
 <div class="foot"><a href="chapters/s15.html">💬 Пересказ игроков</a><a href="index.html#road/s15">✨ на небе</a></div>
 </div>
 <div class="arc"><span>Основание Светоча</span></div>
@@ -222,14 +241,14 @@ p.sum{font-size:13.5px;line-height:1.55;color:#4c3c22}
 <span class="sn">СЕССИЯ 18</span><span class="rd">2025-06-18</span>
 <h3>The founding (Основание — зомби на кладбище)</h3>
 <p class="sum">Веха Kingdom Timeline: «Основание Оплота», Дезнус 4710 — основание столицы королевства (сопоставлено с названием сессии «The founding»). Возвращение во владения — беспорядок: зомби с кладбища мешают рабочим (Miro: «Зомби в столице», 24 Дезнуса).</p>
-<div class="meds"><span class="med boss"><span class="g"><img src="img/s18_nugrah.webp" alt="" loading="lazy"></span><span><span class="lab">ПРОТИВНИК</span>Курмиль (злой друид, брат Боккена)</span></span></div>
+<div class="meds"><span class="med boss" data-lab="ПРОТИВНИК · СЕССИЯ 18" data-name="Курмиль (злой друид, брат Боккена)" data-note="Встречен на окраинах; напал на партию. По npc_glossary — убит в S18; весть о его гибели передана Боккену в S20." data-glyph="⚔️" data-img="img/s18_nugrah.webp"><span class="g"><img src="img/s18_nugrah.webp" alt="" loading="lazy"></span><span><span class="lab">ПРОТИВНИК</span>Курмиль (злой друид, брат Боккена)</span></span></div>
 <div class="foot"><a href="chapters/s18.html">💬 Пересказ игроков</a><a href="index.html#road/s18">✨ на небе</a></div>
 </div>
 <div class="card l"><span class="knot"></span>
 <span class="sn">СЕССИЯ 19</span><span class="rd">2025-06-25</span>
 <h3>Kingdom come (Тартук = Тартуччио!)</h3>
 <p class="sum">Вехи Kingdom Timeline за Эрастус 4710, попадающие в таймскип: 2-й уровень королевства и основание Татцельфорда. Поход в пещеру кобольдов, истребление племени («первый геноцид»).</p>
-<div class="meds"><span class="med boss"><span class="g"><img src="img/s19_tartuk.webp" alt="" loading="lazy"></span><span><span class="lab">ПРОТИВНИК</span>Тартук (= Тартуччио)</span></span></div>
+<div class="meds"><span class="med boss" data-lab="ПРОТИВНИК · СЕССИЯ 19" data-name="Тартук (= Тартуччио)" data-note="Раскрыто: шаман кобольдов Тартук — это бывший Тартуччио. Проводил ритуалы усиления кобольдов и жертвоприношения дьяволу-кобольду; стоял за похищениями жителей." data-glyph="🦎" data-img="img/s19_tartuk.webp"><span class="g"><img src="img/s19_tartuk.webp" alt="" loading="lazy"></span><span><span class="lab">ПРОТИВНИК</span>Тартук (= Тартуччио)</span></span></div>
 <div class="foot"><a href="chapters/s19.html">💬 Пересказ игроков</a><a href="index.html#road/s19">✨ на небе</a></div>
 </div>
 <div class="card r"><span class="knot"></span>
@@ -251,7 +270,7 @@ p.sum{font-size:13.5px;line-height:1.55;color:#4c3c22}
 <span class="sn">СЕССИЯ 22</span><span class="rd">2025-07-23</span>
 <h3>Kingdom grows? (Терессия, палка Стразора, начало fae-арки)</h3>
 <p class="sum">Осмотр вещей пропавшего постояльца: волколак работал с Эйриком, использующим животных для боёв на арене. Визит к дриаде Терессии: отдала волшебные перья и раскрыла, что палка Стразора — часть феи (спрашивать в лесах).</p>
-<div class="meds"><span class="med boss"><span class="g">⚔️</span><span><span class="lab">ПРОТИВНИК</span>Эйрик</span></span></div>
+<div class="meds"><span class="med boss" data-lab="ПРОТИВНИК · СЕССИЯ 22" data-name="Эйрик" data-note="Звероторговец, использует животных для боёв на арене; волколак (Кундал) работал с ним. Узнано расположение его лагеря." data-glyph="⚔️"><span class="g">⚔️</span><span><span class="lab">ПРОТИВНИК</span>Эйрик</span></span></div>
 <div class="foot"><a href="chapters/s22.html">💬 Пересказ игроков</a><a href="index.html#road/s22">✨ на небе</a></div>
 </div>
 <div class="card l"><span class="knot"></span>
@@ -265,21 +284,21 @@ p.sum{font-size:13.5px;line-height:1.55;color:#4c3c22}
 <span class="sn">СЕССИЯ 24</span><span class="rd">2025-08-06</span>
 <h3>Fae? Fae :fear (Пир у Тана)</h3>
 <p class="sum">Летний Шторм заключает пари с Таном: если он сможет развлечь Тана через героев — те возвращаются домой; если провал — кролик становится собственностью Тана. Стразор разговаривает с Архивисткой.</p>
-<div class="meds"><span class="med boss"><span class="g"><img src="img/s24_thane.png" alt="" loading="lazy"></span><span><span class="lab">ПРОТИВНИК</span>Тан</span></span><span class="med"><span class="g">🪙</span><span><span class="lab">ТРОФЕЙ</span>20 золотых от Летнего Шторма</span></span></div>
+<div class="meds"><span class="med boss" data-lab="ПРОТИВНИК · СЕССИЯ 24" data-name="Тан" data-note="Владыка Первого Мира и устроитель Пира. Полностью контролирует пространство пира — запрещает призывы, лечит магией дуэли (urony не наносят вреда)." data-glyph="🧚" data-img="img/s24_thane.png"><span class="g"><img src="img/s24_thane.png" alt="" loading="lazy"></span><span><span class="lab">ПРОТИВНИК</span>Тан</span></span><span class="med" data-lab="ТРОФЕЙ · СЕССИЯ 24" data-name="20 золотых от Летнего Шторма" data-note="Летний Шторм передал 20 золотых как процент с ставки" data-glyph="🪙"><span class="g">🪙</span><span><span class="lab">ТРОФЕЙ</span>20 золотых от Летнего Шторма</span></span></div>
 <div class="foot"><a href="chapters/s24.html">💬 Пересказ игроков</a><a href="index.html#road/s24">✨ на небе</a></div>
 </div>
 <div class="card l"><span class="knot"></span>
 <span class="sn">СЕССИЯ 25</span><span class="rd">2025-08-20</span>
 <h3>Escape from FAE! (Побег из Первого Мира)</h3>
 <p class="sum">Каэлум использует Ventriloquist Ring: поворачивает кольцо и громко кричит «бегите!» — голос проецируется в толпу фей за 60 футов. Chase mechanics: герои прорываются через 5 препятствий — толпа фей, элитная стража, живой лес, лиственный шторм, и финальный бой с гончими.</p>
-<div class="meds"><span class="med boss"><span class="g"><img src="img/s25_wild-hunt-hound.webp" alt="" loading="lazy"></span><span><span class="lab">ПРОТИВНИК</span>Гончие Тана (столовые псы)</span></span><span class="med"><span class="g">✦</span><span><span class="lab">ТРОФЕЙ</span>Серебряная фигурка гончей</span></span></div>
+<div class="meds"><span class="med boss" data-lab="ПРОТИВНИК · СЕССИЯ 25" data-name="Гончие Тана (столовые псы)" data-note="Когда Тан понял что герои сбегают, он превратил столы пира в собачьих по виду гончих и натравил их на партию. После выматывающей погони через лес 4 гончих настигли героев у Грани Будущего." data-glyph="🧚" data-img="img/s25_wild-hunt-hound.webp"><span class="g"><img src="img/s25_wild-hunt-hound.webp" alt="" loading="lazy"></span><span><span class="lab">ПРОТИВНИК</span>Гончие Тана (столовые псы)</span></span><span class="med" data-lab="ТРОФЕЙ · СЕССИЯ 25" data-name="Серебряная фигурка гончей" data-note="После боя с гончими Тана нащупал в кармане. Кому достанется определили броском 1d5." data-glyph="✦"><span class="g">✦</span><span><span class="lab">ТРОФЕЙ</span>Серебряная фигурка гончей</span></span></div>
 <div class="foot"><a href="chapters/s25.html">💬 Пересказ игроков</a><a href="index.html#road/s25">✨ на небе</a></div>
 </div>
 <div class="card r"><span class="knot"></span>
 <span class="sn">СЕССИЯ 26</span><span class="rd">2025-08-27</span>
 <h3>No rest for the kings! (Тролльи псы, дварфийская шахта, мёртвый единорог)</h3>
 <p class="sum">Кроу рассказывает партии: к нему вечером в столице приходила Джейтал. Партия наткнулась на поляну с трупом единорога рядом с гнилым &#x27;болотом&#x27;.</p>
-<div class="meds"><span class="med boss"><span class="g"><img src="img/s26_trollhound.webp" alt="" loading="lazy"></span><span><span class="lab">ПРОТИВНИК</span>Тролльи псы</span></span><span class="med"><span class="g">✦</span><span><span class="lab">ТРОФЕЙ</span>Руда холодного железа</span></span></div>
+<div class="meds"><span class="med boss" data-lab="ПРОТИВНИК · СЕССИЯ 26" data-name="Тролльи псы" data-note="Псы с регенерацией. Воспринимаются как серьёзная угроза: если несколько сбегут из заточения, могут за год расплодиться и опустошать деревни региона." data-glyph="🧌" data-img="img/s26_trollhound.webp"><span class="g"><img src="img/s26_trollhound.webp" alt="" loading="lazy"></span><span><span class="lab">ПРОТИВНИК</span>Тролльи псы</span></span><span class="med" data-lab="ТРОФЕЙ · СЕССИЯ 26" data-name="Руда холодного железа" data-note="Из останков босса Аурос Рача + из шахты при полном обыске" data-glyph="✦"><span class="g">✦</span><span><span class="lab">ТРОФЕЙ</span>Руда холодного железа</span></span></div>
 <div class="foot"><a href="chapters/s26.html">💬 Пересказ игроков</a><a href="index.html#road/s26">✨ на небе</a></div>
 </div>
 <div class="arc"><span>Соседи и интриги</span></div>
@@ -287,56 +306,56 @@ p.sum{font-size:13.5px;line-height:1.55;color:#4c3c22}
 <span class="sn">СЕССИЯ 27</span><span class="rd">2025-09-03</span>
 <h3>Half a year passed (Управление королевством и дипломатические стратегии)</h3>
 <p class="sum">Полный ход королевства Светоч — достигнут 3-й уровень. Партия (Стразор+Кроу+Каэлум+Нок-Нок+Тристиан) отправляется на восток исследовать «Камляндию» (видимо равнины восточнее королевства).</p>
-<div class="meds"><span class="med boss"><span class="g"><img src="img/s27_wyvern.webp" alt="" loading="lazy"></span><span><span class="lab">ПРОТИВНИК</span>Две виверны</span></span><span class="med"><span class="g">🪙</span><span><span class="lab">ТРОФЕЙ</span>Сокровище-приманка вивернов</span></span></div>
+<div class="meds"><span class="med boss" data-lab="ПРОТИВНИК · СЕССИЯ 27" data-name="Две виверны" data-note="Случайный энкаунтер у руин ирригационной системы. Первая виверна (роняет сокровище, типа «уронила и не унесла») — критически провалилась первой атакой, Кроу добил фазовым болтом." data-glyph="🐲" data-img="img/s27_wyvern.webp"><span class="g"><img src="img/s27_wyvern.webp" alt="" loading="lazy"></span><span><span class="lab">ПРОТИВНИК</span>Две виверны</span></span><span class="med" data-lab="ТРОФЕЙ · СЕССИЯ 27" data-name="Сокровище-приманка вивернов" data-note="Сокровище, которое виверны &#x27;роняли&#x27; как приманку — после боя" data-glyph="🪙"><span class="g">🪙</span><span><span class="lab">ТРОФЕЙ</span>Сокровище-приманка вивернов</span></span></div>
 <div class="foot"><a href="chapters/s27.html">💬 Пересказ игроков</a><a href="index.html#road/s27">✨ на небе</a></div>
 </div>
 <div class="card r"><span class="knot"></span>
 <span class="sn">СЕССИЯ 28</span><span class="rd">2025-09-24</span>
 <h3>Allies or enemies? (Дипломатия в Кобольтских землях и засада в лесу)</h3>
 <p class="sum">Продолжение клиффхенгера 27. Очередной полный ход королевства Светоч, приближается 4-й уровень.</p>
-<div class="meds"><span class="med boss"><span class="g"><img src="img/s28_trollhound.webp" alt="" loading="lazy"></span><span><span class="lab">ПРОТИВНИК</span>Тролль-псы (вторая встреча)</span></span><span class="med"><span class="g">✦</span><span><span class="lab">ТРОФЕЙ</span>Договор о серебряной шахте кобольдов</span></span></div>
+<div class="meds"><span class="med boss" data-lab="ПРОТИВНИК · СЕССИЯ 28" data-name="Тролль-псы (вторая встреча)" data-note="Те самые из прошлой сессии — &#x27;размножаются, как кролики&#x27;. Подкрадываются хрюкая, выбегают навстречу при exploration." data-glyph="🧌" data-img="img/s28_trollhound.webp"><span class="g"><img src="img/s28_trollhound.webp" alt="" loading="lazy"></span><span><span class="lab">ПРОТИВНИК</span>Тролль-псы (вторая встреча)</span></span><span class="med" data-lab="ТРОФЕЙ · СЕССИЯ 28" data-name="Договор о серебряной шахте кобольдов" data-note="Договор с кобольдами после ухода Харгулки" data-glyph="✦"><span class="g">✦</span><span><span class="lab">ТРОФЕЙ</span>Договор о серебряной шахте кобольдов</span></span></div>
 <div class="foot"><a href="chapters/s28.html">💬 Пересказ игроков</a><a href="index.html#road/s28">✨ на небе</a></div>
 </div>
 <div class="card l"><span class="knot"></span>
 <span class="sn">СЕССИЯ 29</span><span class="rd">2025-10-01</span>
 <h3>Эльфийская крепость и хороводы Финн де Ладры</h3>
 <p class="sum">Собака Экундайо лаем привела партию к раненому хозяину после боя с троллями Граглберта. Кроу прочитал окровавленный лист — Третий Трайл.</p>
-<div class="meds"><span class="med boss"><span class="g"><img src="img/s29_troll.webp" alt="" loading="lazy"></span><span><span class="lab">ПРОТИВНИК</span>Три тролля-разбойника</span></span><span class="med"><span class="g">✦</span><span><span class="lab">ТРОФЕЙ</span>Наручи из виверновой чешуи</span></span></div>
+<div class="meds"><span class="med boss" data-lab="ПРОТИВНИК · СЕССИЯ 29" data-name="Три тролля-разбойника" data-note="Группа из трёх обычных троллей, последователи Граглберта. Один носил наручи из виверновой чешуи (по рангу), пр себе имел также Hunter&#x27;s Bane (детектор невидимых), Cold Iron Kukri и +1 Light Hammer (одноразовый предмет — выявляет невидимое существо одним действ" data-glyph="🧌" data-img="img/s29_troll.webp"><span class="g"><img src="img/s29_troll.webp" alt="" loading="lazy"></span><span><span class="lab">ПРОТИВНИК</span>Три тролля-разбойника</span></span><span class="med" data-lab="ТРОФЕЙ · СЕССИЯ 29" data-name="Наручи из виверновой чешуи" data-note="С трупа тролля-разбойника после боя с Экундайо" data-glyph="✦"><span class="g">✦</span><span><span class="lab">ТРОФЕЙ</span>Наручи из виверновой чешуи</span></span></div>
 <div class="foot"><a href="chapters/s29.html">💬 Пересказ игроков</a><a href="index.html#road/s29">✨ на небе</a></div>
 </div>
 <div class="card r"><span class="knot"></span>
 <span class="sn">СЕССИЯ 30</span><span class="rd">2025-10-08</span>
 <h3>Танец баобан сид и хаос в королевстве</h3>
 <p class="sum">Партия поднимается на вершину первой башни эльфийской крепости и встречает Баобан Сид — фею-нежить с окровавленными руками среди цветов. Кроу читает эльфийский текст из сундука.</p>
-<div class="meds"><span class="med boss"><span class="g"><img src="img/s30_the-dancing-lady.webp" alt="" loading="lazy"></span><span><span class="lab">ПРОТИВНИК</span>Баобан Сид</span></span><span class="med"><span class="g">✦</span><span><span class="lab">ТРОФЕЙ</span>Алебастровая статуя танцующей эльфийки</span></span></div>
+<div class="meds"><span class="med boss" data-lab="ПРОТИВНИК · СЕССИЯ 30" data-name="Баобан Сид" data-note="Эльфийского вида дама с окровавленными руками, окружённая цветами на вершине башни. Редкое существо: «семя нежити Первого Мира» — фея, которая стала на путь нежити, оставаясь живой." data-glyph="🧚" data-img="img/s30_the-dancing-lady.webp"><span class="g"><img src="img/s30_the-dancing-lady.webp" alt="" loading="lazy"></span><span><span class="lab">ПРОТИВНИК</span>Баобан Сид</span></span><span class="med" data-lab="ТРОФЕЙ · СЕССИЯ 30" data-name="Алебастровая статуя танцующей эльфийки" data-note="Из покоев Баобан Сид; отдана Леди Лили Тескертин за Diplomat&#x27;s Badge" data-glyph="✦"><span class="g">✦</span><span><span class="lab">ТРОФЕЙ</span>Алебастровая статуя танцующей эльфийки</span></span></div>
 <div class="foot"><a href="chapters/s30.html">💬 Пересказ игроков</a><a href="index.html#road/s30">✨ на небе</a></div>
 </div>
 <div class="card l"><span class="knot"></span>
 <span class="sn">СЕССИЯ 31</span><span class="rd">2025-10-17</span>
 <h3>Мерцающий остров и взгляд Йог-Сатота</h3>
 <p class="sum">У разбитых гнилых ящиков на причале партию атакует из засады «Ходак» — шамблер. Партия продвигается через крапиву и туман к древней разрушенной башне в центре острова.</p>
-<div class="meds"><span class="med boss"><span class="g"><img src="img/s31_shambler.webp" alt="" loading="lazy"></span><span><span class="lab">ПРОТИВНИК</span>Шамблер «Ходак»</span></span><span class="med"><span class="g">⚗️</span><span><span class="lab">ТРОФЕЙ</span>Зелье плавания (среднее)</span></span></div>
+<div class="meds"><span class="med boss" data-lab="ПРОТИВНИК · СЕССИЯ 31" data-name="Шамблер «Ходак»" data-note="Хищное хитрое плотоядное растение, обычно живёт в одиночку и устраивает засады. На Мерцающем острове ждал партию у причала среди разбитых ящиков." data-glyph="⚔️" data-img="img/s31_shambler.webp"><span class="g"><img src="img/s31_shambler.webp" alt="" loading="lazy"></span><span><span class="lab">ПРОТИВНИК</span>Шамблер «Ходак»</span></span><span class="med" data-lab="ТРОФЕЙ · СЕССИЯ 31" data-name="Зелье плавания (среднее)" data-note="В гнилых ящиках у причала после шамблер-боя" data-glyph="⚗️"><span class="g">⚗️</span><span><span class="lab">ТРОФЕЙ</span>Зелье плавания (среднее)</span></span></div>
 <div class="foot"><a href="chapters/s31.html">💬 Пересказ игроков</a><a href="index.html#road/s31">✨ на небе</a></div>
 </div>
 <div class="card r"><span class="knot"></span>
 <span class="sn">СЕССИЯ 32</span><span class="rd">2025-10-23</span>
 <h3>Тени в подземном храме и племя ящеров</h3>
 <p class="sum">Спустились по лестнице в нижний зал — чёрные стены, пол в чёрной смоле, тени-силуэты вдоль стен. После боя обнаружены: торчащая из тушки бормотуна Кровавая Кукри Жажда; в кучке пепла одной из «теней» — кольцо с символом Фаразмы (240 gp); камень в полу со спиралью, излучающий сильную магию (выше уровня партии для Ide</p>
-<div class="meds"><span class="med boss"><span class="g"><img src="img/s32_gibbering-mouther.webp" alt="" loading="lazy"></span><span><span class="lab">ПРОТИВНИК</span>Многородный бормотун (1)</span></span><span class="med"><span class="g">✦</span><span><span class="lab">ТРОФЕЙ</span>Палочка Усиков Гнили (Grim Tendril)</span></span></div>
+<div class="meds"><span class="med boss" data-lab="ПРОТИВНИК · СЕССИЯ 32" data-name="Многородный бормотун (1)" data-note="Аморфное чёрное существо изо ртов и жидкости, поднявшееся из чёрной смолы в нижнем зале подземелья. Плюётся кислотой (попала в глаза Валери — конфузия от вспышки), укусы + захват, мощный AOE-ультразвук конфузии (DC высокий — Каэлум и Клык надолго в Confused, а" data-glyph="⚔️" data-img="img/s32_gibbering-mouther.webp"><span class="g"><img src="img/s32_gibbering-mouther.webp" alt="" loading="lazy"></span><span><span class="lab">ПРОТИВНИК</span>Многородный бормотун (1)</span></span><span class="med" data-lab="ТРОФЕЙ · СЕССИЯ 32" data-name="Палочка Усиков Гнили (Grim Tendril)" data-note="В потайной комнате на каменной полке" data-glyph="✦"><span class="g">✦</span><span><span class="lab">ТРОФЕЙ</span>Палочка Усиков Гнили (Grim Tendril)</span></span></div>
 <div class="foot"><a href="chapters/s32.html">💬 Пересказ игроков</a><a href="index.html#road/s32">✨ на небе</a></div>
 </div>
 <div class="card l"><span class="knot"></span>
 <span class="sn">СЕССИЯ 33</span><span class="rd">2025-10-30</span>
 <h3>Гиена-курьер, кобольды-шпионы и серебряный след</h3>
 <p class="sum">Допрос сдавшегося мимика-гиены. Полный ход королевства — достигнут 4-й уровень!</p>
-<div class="meds"><span class="med boss"><span class="g"><img src="img/s33_mudwretch.webp" alt="" loading="lazy"></span><span><span class="lab">ПРОТИВНИК</span>Мирные грязевые элементали (Mud Mephits / M…</span></span><span class="med"><span class="g">✦</span><span><span class="lab">ТРОФЕЙ</span>Платиновый идол в форме ухмыляющегося черепа</span></span></div>
+<div class="meds"><span class="med boss" data-lab="ПРОТИВНИК · СЕССИЯ 33" data-name="Мирные грязевые элементали (Mud Mephits / M…" data-note="Группа из ~4-5 разумных грязевых элементалей, живущих на пузырящихся горячих илистых отмелях северного берега Серебристого Следа." data-glyph="⚔️" data-img="img/s33_mudwretch.webp"><span class="g"><img src="img/s33_mudwretch.webp" alt="" loading="lazy"></span><span><span class="lab">ПРОТИВНИК</span>Мирные грязевые элементали (Mud Mephits / M…</span></span><span class="med" data-lab="ТРОФЕЙ · СЕССИЯ 33" data-name="Платиновый идол в форме ухмыляющегося черепа" data-note="В сумке мумифицированного Талдорского капитан-генерала, в илистой отмели Серебристого Следа" data-glyph="✦"><span class="g">✦</span><span><span class="lab">ТРОФЕЙ</span>Платиновый идол в форме ухмыляющегося черепа</span></span></div>
 <div class="foot"><a href="chapters/s33.html">💬 Пересказ игроков</a><a href="index.html#road/s33">✨ на небе</a></div>
 </div>
 <div class="card r"><span class="knot"></span>
 <span class="sn">СЕССИЯ 34</span><span class="rd">2025-11-06</span>
 <h3>Огненный дрейк на Когте: туч, волков и подложный дракон</h3>
 <p class="sum">На середине подъёма по горе Коготь — звук дождя на безоблачном небе. Кобольды привели партию к огромной крылатой ящерице — &#x27;эти пришли к тебе!&#x27;.</p>
-<div class="meds"><span class="med boss"><span class="g"><img src="img/s34_wolf-dire.webp" alt="" loading="lazy"></span><span><span class="lab">ПРОТИВНИК</span>vargs environment</span></span><span class="med"><span class="g">✦</span><span><span class="lab">ТРОФЕЙ</span>Палочка Драконьего Дыхания (Wand of Dragon …</span></span></div>
+<div class="meds"><span class="med boss" data-lab="ПРОТИВНИК · СЕССИЯ 34" data-name="vargs environment" data-note="" data-glyph="⚔️" data-img="img/s34_wolf-dire.webp"><span class="g"><img src="img/s34_wolf-dire.webp" alt="" loading="lazy"></span><span><span class="lab">ПРОТИВНИК</span>vargs environment</span></span><span class="med" data-lab="ТРОФЕЙ · СЕССИЯ 34" data-name="Палочка Драконьего Дыхания (Wand of Dragon …" data-note="На каменной полке-кладе у дрейка после боя" data-glyph="✦"><span class="g">✦</span><span><span class="lab">ТРОФЕЙ</span>Палочка Драконьего Дыхания (Wand of Dragon …</span></span></div>
 <div class="foot"><a href="chapters/s34.html">💬 Пересказ игроков</a><a href="index.html#road/s34">✨ на небе</a></div>
 </div>
 <div class="arc"><span>Заговоры и война с Харгулкой</span></div>
@@ -344,77 +363,77 @@ p.sum{font-size:13.5px;line-height:1.55;color:#4c3c22}
 <span class="sn">СЕССИЯ 35</span><span class="rd">2025-11-13</span>
 <h3>Нарглум Трёхглазый и тень пропагандиста</h3>
 <p class="sum">Партия (Стразор, Кроу, Каэлум + Нок-нок + Харрим) прибыла к посту Олега за полдня по новым дорогам. Бой с тремя крылатыми гоблинскими псами.</p>
-<div class="meds"><span class="med boss"><span class="g"><img src="img/s35_goblin-war-chanter.webp" alt="" loading="lazy"></span><span><span class="lab">ПРОТИВНИК</span>Гоблин-друид у ворот Олега</span></span><span class="med"><span class="g">🛡️</span><span><span class="lab">ТРОФЕЙ</span>Крепкий щит (Sturdy Shield)</span></span></div>
+<div class="meds"><span class="med boss" data-lab="ПРОТИВНИК · СЕССИЯ 35" data-name="Гоблин-друид у ворот Олега" data-note="Лидер гоблинов, штурмовавших пост Олега. Требовал, чтобы герои сложили оружие и стали заключёнными, иначе &#x27;убьём вас во имя великого Нарглума Трёхглазого&#x27;." data-glyph="👺" data-img="img/s35_goblin-war-chanter.webp"><span class="g"><img src="img/s35_goblin-war-chanter.webp" alt="" loading="lazy"></span><span><span class="lab">ПРОТИВНИК</span>Гоблин-друид у ворот Олега</span></span><span class="med" data-lab="ТРОФЕЙ · СЕССИЯ 35" data-name="Крепкий щит (Sturdy Shield)" data-note="В сокровищнице Нарглума за 3-й замочной скважиной, на фигуре-фетише" data-glyph="🛡️"><span class="g">🛡️</span><span><span class="lab">ТРОФЕЙ</span>Крепкий щит (Sturdy Shield)</span></span></div>
 <div class="foot"><a href="chapters/s35.html">💬 Пересказ игроков</a><a href="index.html#road/s35">✨ на небе</a></div>
 </div>
 <div class="card r"><span class="knot"></span>
 <span class="sn">СЕССИЯ 36</span><span class="rd">2025-11-20</span>
 <h3>Григорий-революционер и неожиданная гопница из Рестова</h3>
 <p class="sum">Стразор инкогнито шныряет по столице, собирая слухи про Григория (явная подозрительная заявка). Стразор ведёт Балу в храм-таверну Кайдена Кайлина выпить пива.</p>
-<div class="meds"><span class="med boss"><span class="g"><img src="img/s36_grigori.webp" alt="" loading="lazy"></span><span><span class="lab">ПРОТИВНИК</span>Григорий</span></span><span class="med"><span class="g">✦</span><span><span class="lab">ТРОФЕЙ</span>Конфискованные склянки наркотиков из Дагерм…</span></span></div>
+<div class="meds"><span class="med boss" data-lab="ПРОТИВНИК · СЕССИЯ 36" data-name="Григорий" data-note="Новый главный антагонист сессии — оратор-пропагандист, открыто выступающий на площади столицы Светоча против правителей." data-glyph="⚔️" data-img="img/s36_grigori.webp"><span class="g"><img src="img/s36_grigori.webp" alt="" loading="lazy"></span><span><span class="lab">ПРОТИВНИК</span>Григорий</span></span><span class="med" data-lab="ТРОФЕЙ · СЕССИЯ 36" data-name="Конфискованные склянки наркотиков из Дагерм…" data-note="Конфискация у мивонских контрабандистов, операция в тронном зале" data-glyph="✦"><span class="g">✦</span><span><span class="lab">ТРОФЕЙ</span>Конфискованные склянки наркотиков из Дагерм…</span></span></div>
 <div class="foot"><a href="chapters/s36.html">💬 Пересказ игроков</a><a href="index.html#road/s36">✨ на небе</a></div>
 </div>
 <div class="card l"><span class="knot"></span>
 <span class="sn">СЕССИЯ 37</span><span class="rd">2025-11-27</span>
 <h3>Вонючая бомба для Барда и ящер в логове</h3>
 <p class="sum">Вечером 26-го Бала отправляется в ближайший лес с вином, ищет грибной круг, чтобы провести оккультный ритуал связи со своей &#x27;старшей&#x27; — феей из детства, живущей в Семи Арках. 27 число.</p>
-<div class="meds"><span class="med boss"><span class="g"><img src="img/s37_flame-drake.webp" alt="" loading="lazy"></span><span><span class="lab">ПРОТИВНИК</span>Драк-ящер в южном логове</span></span><span class="med"><span class="g">✦</span><span><span class="lab">ТРОФЕЙ</span>Копьё Стасяна (магическое)</span></span></div>
+<div class="meds"><span class="med boss" data-lab="ПРОТИВНИК · СЕССИЯ 37" data-name="Драк-ящер в южном логове" data-note="Огромный четырёхногий ящер-дракон, который жил в глубокой пещере посреди заросшей замшелой &#x27;миниатюрной горы&#x27; к югу от Светоча." data-glyph="⚔️" data-img="img/s37_flame-drake.webp"><span class="g"><img src="img/s37_flame-drake.webp" alt="" loading="lazy"></span><span><span class="lab">ПРОТИВНИК</span>Драк-ящер в южном логове</span></span><span class="med" data-lab="ТРОФЕЙ · СЕССИЯ 37" data-name="Копьё Стасяна (магическое)" data-note="Вытащено из стены логова (Athletics check) — драк-ящер тёрся спиной о бревно, копьё застряло. Это то самое копьё Стасяна." data-glyph="✦"><span class="g">✦</span><span><span class="lab">ТРОФЕЙ</span>Копьё Стасяна (магическое)</span></span></div>
 <div class="foot"><a href="chapters/s37.html">💬 Пересказ игроков</a><a href="index.html#road/s37">✨ на небе</a></div>
 </div>
 <div class="card r"><span class="knot"></span>
 <span class="sn">СЕССИЯ 38</span><span class="rd">2025-12-18</span>
 <h3>Поражение армии и ледяной вожак варгов</h3>
 <p class="sum">Первый армейский бой кампании. Бой с большой стаей варгов под предводительством необычного босса-варга, чьё дыхание из льда.</p>
-<div class="meds"><span class="med boss"><span class="g"><img src="img/s38_wolf-dire.webp" alt="" loading="lazy"></span><span><span class="lab">ПРОТИВНИК</span>Стая южных варгов</span></span><span class="med"><span class="g">✦</span><span><span class="lab">ТРОФЕЙ</span>Голова ледяного вожака варгов</span></span></div>
+<div class="meds"><span class="med boss" data-lab="ПРОТИВНИК · СЕССИЯ 38" data-name="Стая южных варгов" data-note="Стая обычных варгов под предводительством ледяного вожака. В бою использовали тактику стаи (Pack Tactics): когда PC атаковал одного варга, остальные варги вокруг могли откусить (Pack Reaction)." data-glyph="🐺" data-img="img/s38_wolf-dire.webp"><span class="g"><img src="img/s38_wolf-dire.webp" alt="" loading="lazy"></span><span><span class="lab">ПРОТИВНИК</span>Стая южных варгов</span></span><span class="med" data-lab="ТРОФЕЙ · СЕССИЯ 38" data-name="Голова ледяного вожака варгов" data-note="Отделена косой после убийства ледяного вожака варгов" data-glyph="✦"><span class="g">✦</span><span><span class="lab">ТРОФЕЙ</span>Голова ледяного вожака варгов</span></span></div>
 <div class="foot"><a href="chapters/s38.html">💬 Пересказ игроков</a><a href="index.html#road/s38">✨ на небе</a></div>
 </div>
 <div class="card l"><span class="knot"></span>
 <span class="sn">СЕССИЯ 39</span><span class="rd">2025-12-26</span>
 <h3>Лаборатория Талдора и сёстры-двойники</h3>
 <p class="sum">Бой с огненными элементалями плазменной комнаты. В южной комнате-кабинете атакуют дерновые псы (земляные элементальные собаки).</p>
-<div class="meds"><span class="med boss"><span class="g"><img src="img/s39_living-wildfire.webp" alt="" loading="lazy"></span><span><span class="lab">ПРОТИВНИК</span>Огненные элементали лаборатории</span></span><span class="med"><span class="g">✦</span><span><span class="lab">ТРОФЕЙ</span>Огненная звезда (медальон)</span></span></div>
+<div class="meds"><span class="med boss" data-lab="ПРОТИВНИК · СЕССИЯ 39" data-name="Огненные элементали лаборатории" data-note="Группа огненных элементалей, охраняющая плазменное ядро лаборатории. Одни крылатые (маленькие, летают на уровне земли), один больше остальных (использовал AOE-пламя вокруг себя)." data-glyph="⚔️" data-img="img/s39_living-wildfire.webp"><span class="g"><img src="img/s39_living-wildfire.webp" alt="" loading="lazy"></span><span><span class="lab">ПРОТИВНИК</span>Огненные элементали лаборатории</span></span><span class="med" data-lab="ТРОФЕЙ · СЕССИЯ 39" data-name="Огненная звезда (медальон)" data-note="Среди останков убитого огненного элементаля; разыграно на 1d100 (Бала выиграла)" data-glyph="✦"><span class="g">✦</span><span><span class="lab">ТРОФЕЙ</span>Огненная звезда (медальон)</span></span></div>
 <div class="foot"><a href="chapters/s39.html">💬 Пересказ игроков</a><a href="index.html#road/s39">✨ на небе</a></div>
 </div>
 <div class="card r"><span class="knot"></span>
 <span class="sn">СЕССИЯ 40</span><span class="rd">2026-01-01</span>
 <h3>Королевский ход, могила тигриного владыки и первая армейская победа</h3>
 <p class="sum">Полный королевский ход за конец месяца Эрастус. В зарослях ежевики на равнинах партия обнаруживает каменную могилу.</p>
-<div class="meds"><span class="med boss"><span class="g"><img src="img/s40_troll.webp" alt="" loading="lazy"></span><span><span class="lab">ПРОТИВНИК</span>Армия троллей (южная)</span></span><span class="med"><span class="g">💍</span><span><span class="lab">ТРОФЕЙ</span>Отпечаток тигриного кольца (на мыле)</span></span></div>
+<div class="meds"><span class="med boss" data-lab="ПРОТИВНИК · СЕССИЯ 40" data-name="Армия троллей (южная)" data-note="Тяжелейший армейский противник: регенерация и тактика &#x27;чем больше у них урона, тем они сильнее становятся&#x27;. Несмотря на то, что у партии теперь ДВЕ армии (Второй оборонительный корпус + Четвёртый пехотный), бой длится несколько раундов и партия чуть не теряет " data-glyph="🧌" data-img="img/s40_troll.webp"><span class="g"><img src="img/s40_troll.webp" alt="" loading="lazy"></span><span><span class="lab">ПРОТИВНИК</span>Армия троллей (южная)</span></span><span class="med" data-lab="ТРОФЕЙ · СЕССИЯ 40" data-name="Отпечаток тигриного кольца (на мыле)" data-note="Отпечаток на куске мыла Стразора — Бала сделала, чтобы любоваться изображёнными тиграми. Сувенир." data-glyph="💍"><span class="g">💍</span><span><span class="lab">ТРОФЕЙ</span>Отпечаток тигриного кольца (на мыле)</span></span></div>
 <div class="foot"><a href="chapters/s40.html">💬 Пересказ игроков</a><a href="index.html#road/s40">✨ на небе</a></div>
 </div>
 <div class="card l"><span class="knot"></span>
 <span class="sn">СЕССИЯ 41</span><span class="rd">2026-01-15</span>
 <h3>Штурм крепости Харгулки: невидимый клин и древнее эхо Торага</h3>
 <p class="sum">Партия осматривает подходы. ПЕРВЫЙ БОЙ.</p>
-<div class="meds"><span class="med boss"><span class="g"><img src="img/s41_hobgoblin-archer.webp" alt="" loading="lazy"></span><span><span class="lab">ПРОТИВНИК</span>Хобгоблин-командир (лучник)</span></span><span class="med"><span class="g">✦</span><span><span class="lab">ТРОФЕЙ</span>fortress explored knowledge</span></span></div>
+<div class="meds"><span class="med boss" data-lab="ПРОТИВНИК · СЕССИЯ 41" data-name="Хобгоблин-командир (лучник)" data-note="Стоит на страже у двери в первом боевом помещении. Когда партия открыла двери — БРОСИЛ арбалет и достал короткий меч, выкрикнул &#x27;Во имя Харгулки!" data-glyph="👺" data-img="img/s41_hobgoblin-archer.webp"><span class="g"><img src="img/s41_hobgoblin-archer.webp" alt="" loading="lazy"></span><span><span class="lab">ПРОТИВНИК</span>Хобгоблин-командир (лучник)</span></span><span class="med" data-lab="ТРОФЕЙ · СЕССИЯ 41" data-name="fortress explored knowledge" data-note="Зачищена часть крепости Харгулки. Узнан лор: древняя дварфийская крепость с храмом Торага." data-glyph="✦"><span class="g">✦</span><span><span class="lab">ТРОФЕЙ</span>fortress explored knowledge</span></span></div>
 <div class="foot"><a href="chapters/s41.html">💬 Пересказ игроков</a><a href="index.html#road/s41">✨ на небе</a></div>
 </div>
 <div class="card r"><span class="knot"></span>
 <span class="sn">СЕССИЯ 42</span><span class="rd">2026-01-22</span>
 <h3>Кровь на нижнем этаже: засада троллей, месть Экундайо и тронный зал Харгулки</h3>
 <p class="sum">ФИНАЛЬНЫЙ БОЙ. В мясной пещере партия встретила скрэга (особого тролля) и великана клана Граглберта — те только что закончили переговоры (один другого по голове ударил).</p>
-<div class="meds"><span class="med boss"><span class="g"><img src="img/s42_hobgoblin-archer.webp" alt="" loading="lazy"></span><span><span class="lab">ПРОТИВНИК</span>Хобгоблины-снайперы (трое лучников)</span></span><span class="med"><span class="g">⚔️</span><span><span class="lab">ТРОФЕЙ</span>Доспехи, мечи и арбалетные болты лучников</span></span></div>
+<div class="meds"><span class="med boss" data-lab="ПРОТИВНИК · СЕССИЯ 42" data-name="Хобгоблины-снайперы (трое лучников)" data-note="Трое лучников, которые сбежали в конце сессии 41 и в начале сессии 42 встретили партию у входа в первый этаж. Имеют тактику: один стрелял в спину Кроу, потом поднялся по лестнице наверх для лучшей позиции." data-glyph="👺" data-img="img/s42_hobgoblin-archer.webp"><span class="g"><img src="img/s42_hobgoblin-archer.webp" alt="" loading="lazy"></span><span><span class="lab">ПРОТИВНИК</span>Хобгоблины-снайперы (трое лучников)</span></span><span class="med" data-lab="ТРОФЕЙ · СЕССИЯ 42" data-name="Доспехи, мечи и арбалетные болты лучников" data-note="С трупов трёх лучников после боя" data-glyph="⚔️"><span class="g">⚔️</span><span><span class="lab">ТРОФЕЙ</span>Доспехи, мечи и арбалетные болты лучников</span></span></div>
 <div class="foot"><a href="chapters/s42.html">💬 Пересказ игроков</a><a href="index.html#road/s42">✨ на небе</a></div>
 </div>
 <div class="card l"><span class="knot"></span>
 <span class="sn">СЕССИЯ 43</span><span class="rd">2026-02-12</span>
 <h3>Договор с Дриадой и падение Харгулки: победа ценой Балы</h3>
 <p class="sum">КЛИНИЧЕСКАЯ СМЕРТЬ КРОУ И ВСТРЕЧА С ДРИАДОЙ. ВОСКРЕШЕНИЕ КРОУ И КИНЕМАТОГРАФИЧНОЕ ВОЗВРАЩЕНИЕ.</p>
-<div class="meds"><span class="med boss"><span class="g"><img src="img/s43_hargulka.webp" alt="" loading="lazy"></span><span><span class="lab">ПРОТИВНИК</span>Лорд Харгулка</span></span><span class="med"><span class="g">✦</span><span><span class="lab">ТРОФЕЙ</span>Моргенштерн Харгулки (закатный дуб)</span></span></div>
+<div class="meds"><span class="med boss" data-lab="ПРОТИВНИК · СЕССИЯ 43" data-name="Лорд Харгулка" data-note="ФИНАЛЬНЫЙ БОЙ — УБИТ. После клиффхэнгера сессии 42 Харгулка продолжал преследовать партию по коридорам и лестнице." data-glyph="⚔️" data-img="img/s43_hargulka.webp"><span class="g"><img src="img/s43_hargulka.webp" alt="" loading="lazy"></span><span><span class="lab">ПРОТИВНИК</span>Лорд Харгулка</span></span><span class="med" data-lab="ТРОФЕЙ · СЕССИЯ 43" data-name="Моргенштерн Харгулки (закатный дуб)" data-note="С трупа Харгулки после финального боя" data-glyph="✦"><span class="g">✦</span><span><span class="lab">ТРОФЕЙ</span>Моргенштерн Харгулки (закатный дуб)</span></span></div>
 <div class="foot"><a href="chapters/s43.html">💬 Пересказ игроков</a><a href="index.html#road/s43">✨ на небе</a></div>
 </div>
 <div class="card r"><span class="knot"></span>
 <span class="sn">СЕССИЯ 44</span><span class="rd">2026-02-19</span>
 <h3>Защита Светоча от магических зверей: чужими руками</h3>
 <p class="sum">DM открывает игровую часть: &#x27;Пока правители и отважные герои королевства находятся вдалеке, сражаясь с опасным троллем, его армией, город живёт как обычно. Партия движется на восток, приближаясь к окраине города.</p>
-<div class="meds"><span class="med boss"><span class="g"><img src="img/s44_boar.webp" alt="" loading="lazy"></span><span><span class="lab">ПРОТИВНИК</span>Магические кабаны</span></span><span class="med"><span class="g">✦</span><span><span class="lab">ТРОФЕЙ</span>Моргенштерн +1 Громовый (из закатного древа)</span></span></div>
+<div class="meds"><span class="med boss" data-lab="ПРОТИВНИК · СЕССИЯ 44" data-name="Магические кабаны" data-note="Три+ магических кабана разорвали горожанина у тележки и атаковали партию. ОЧЕНЬ живучие — DM подчёркивал &#x27;кабанчиковый навык неумирания&#x27;, умирали, поднимались, снова умирали." data-glyph="⚔️" data-img="img/s44_boar.webp"><span class="g"><img src="img/s44_boar.webp" alt="" loading="lazy"></span><span><span class="lab">ПРОТИВНИК</span>Магические кабаны</span></span><span class="med" data-lab="ТРОФЕЙ · СЕССИЯ 44" data-name="Моргенштерн +1 Громовый (из закатного древа)" data-note="С тела Харгулки в сессии 43, распределён в сессии 44 кубиком (Бала выиграла; Каэлум кинул 0). Руна перенесена на её меч." data-glyph="✦"><span class="g">✦</span><span><span class="lab">ТРОФЕЙ</span>Моргенштерн +1 Громовый (из закатного древа)</span></span></div>
 <div class="foot"><a href="chapters/s44.html">💬 Пересказ игроков</a><a href="index.html#road/s44">✨ на небе</a></div>
 </div>
 <div class="card l"><span class="knot"></span>
 <span class="sn">СЕССИЯ 45</span><span class="rd">2026-03-12</span>
 <h3>Песнь о медвесыче, проклятие Кроу и великан-самогонщик</h3>
 <p class="sum">Партия путешествует, Кроу в этот момент с ними (хоть игрок Тарас отсутствует — отыгрывает DM). Партия после неудачного ритуала засыпает на поляне.</p>
-<div class="meds"><span class="med boss"><span class="g"><img src="img/s45_violet-fungus.webp" alt="" loading="lazy"></span><span><span class="lab">ПРОТИВНИК</span>Фиолетовые ядовитые грибы (Violet Fungi)</span></span><span class="med"><span class="g">✦</span><span><span class="lab">ТРОФЕЙ</span>Эльфийский плащ (Cloak of Elvenkind)</span></span></div>
+<div class="meds"><span class="med boss" data-lab="ПРОТИВНИК · СЕССИЯ 45" data-name="Фиолетовые ядовитые грибы (Violet Fungi)" data-note="4 особи у входа в пещеру медвесыча. Стразор Recall Knowledge (Nature): &#x27;фиолетовый гриб, в любой пещере встречается, ядовит, ядовитые щупы, начинающие пещероходы умирают&#x27;." data-glyph="🍄" data-img="img/s45_violet-fungus.webp"><span class="g"><img src="img/s45_violet-fungus.webp" alt="" loading="lazy"></span><span><span class="lab">ПРОТИВНИК</span>Фиолетовые ядовитые грибы (Violet Fungi)</span></span><span class="med" data-lab="ТРОФЕЙ · СЕССИЯ 45" data-name="Эльфийский плащ (Cloak of Elvenkind)" data-note="С тела мёртвого эльфийского воина в южных лесах. Каэлум выиграл D-100 у Балы." data-glyph="✦"><span class="g">✦</span><span><span class="lab">ТРОФЕЙ</span>Эльфийский плащ (Cloak of Elvenkind)</span></span></div>
 <div class="foot"><a href="chapters/s45.html">💬 Пересказ игроков</a><a href="index.html#road/s45">✨ на небе</a></div>
 </div>
 <div class="arc"><span>Охотничьи угодья и культ Цветения</span></div>
@@ -422,70 +441,70 @@ p.sum{font-size:13.5px;line-height:1.55;color:#4c3c22}
 <span class="sn">СЕССИЯ 46</span><span class="rd">2026-03-19</span>
 <h3>Логово Медвесыча: огненная звезда, призрачный гнев матери и Бубочка</h3>
 <p class="sum">Призрачные удары попадают по партии (реально наносят урон через мираж). Открытие сессии.</p>
-<div class="meds"><span class="med boss"><span class="g"><img src="img/s46_owlbear.webp" alt="" loading="lazy"></span><span><span class="lab">ПРОТИВНИК</span>Гигантский Медвесыч (уникальный)</span></span><span class="med"><span class="g">💍</span><span><span class="lab">ТРОФЕЙ</span>Кольцо звериной дружбы</span></span></div>
+<div class="meds"><span class="med boss" data-lab="ПРОТИВНИК · СЕССИЯ 46" data-name="Гигантский Медвесыч (уникальный)" data-note="Огромный (Huge+) медвесыч, охранявший подземную пещеру вместе с симбиотическими грибами (которые партия пожгла перед сессией)." data-glyph="🐻" data-img="img/s46_owlbear.webp"><span class="g"><img src="img/s46_owlbear.webp" alt="" loading="lazy"></span><span><span class="lab">ПРОТИВНИК</span>Гигантский Медвесыч (уникальный)</span></span><span class="med" data-lab="ТРОФЕЙ · СЕССИЯ 46" data-name="Кольцо звериной дружбы" data-note="Из гнезда охотника в логове Медвесыча; Стразор идентифицировал и сразу кинул Бале со словами &#x27;Лови, это тебе пригодится!&#x27;" data-glyph="💍"><span class="g">💍</span><span><span class="lab">ТРОФЕЙ</span>Кольцо звериной дружбы</span></span></div>
 <div class="foot"><a href="chapters/s46.html">💬 Пересказ игроков</a><a href="index.html#road/s46">✨ на небе</a></div>
 </div>
 <div class="card l"><span class="knot"></span>
 <span class="sn">СЕССИЯ 47</span><span class="rd">2026-03-26</span>
 <h3>Этеркапы в пещере, проклятое кольцо и тёмная сторона силы Кроу</h3>
 <p class="sum">КЛЮЧЕВОЙ NARRATIVE MOMENT. После боя партия выходит.</p>
-<div class="meds"><span class="med boss"><span class="g"><img src="img/s47_web-lurker.webp" alt="" loading="lazy"></span><span><span class="lab">ПРОТИВНИК</span>Этеркапы (гуманоидные пауки)</span></span><span class="med"><span class="g">✦</span><span><span class="lab">ТРОФЕЙ</span>Перчатка из кокона (похожа на Стразорову)</span></span></div>
+<div class="meds"><span class="med boss" data-lab="ПРОТИВНИК · СЕССИЯ 47" data-name="Этеркапы (гуманоидные пауки)" data-note="В верхней пещере, заполненной паутиной и тысячами маленьких паучков, на партию напали 3 этеркапа + 2 паука. Этеркапы — гуманоидные пауки с тактическим интеллектом, ходят ДО инициативы." data-glyph="🕷️" data-img="img/s47_web-lurker.webp"><span class="g"><img src="img/s47_web-lurker.webp" alt="" loading="lazy"></span><span><span class="lab">ПРОТИВНИК</span>Этеркапы (гуманоидные пауки)</span></span><span class="med" data-lab="ТРОФЕЙ · СЕССИЯ 47" data-name="Перчатка из кокона (похожа на Стразорову)" data-note="В кармане мертвеца в коконе пауков в верхней пещере" data-glyph="✦"><span class="g">✦</span><span><span class="lab">ТРОФЕЙ</span>Перчатка из кокона (похожа на Стразорову)</span></span></div>
 <div class="foot"><a href="chapters/s47.html">💬 Пересказ игроков</a><a href="index.html#road/s47">✨ на небе</a></div>
 </div>
 <div class="card r"><span class="knot"></span>
 <span class="sn">СЕССИЯ 48</span><span class="rd">2026-04-02</span>
 <h3>Два королевских хода, присяга ящеролюдов и пир в честь Экундайо</h3>
 <p class="sum">DM раскрывает важную новость, произошедшую МЕЖДУ сессиями: дипломаты королевства отправились на остров ящеролюдов и получили от них присягу верности. Первый королевский ход в S48 — месяц Рова.</p>
-<div class="meds"><span class="med boss"><span class="g"><img src="img/s48_gmg-cultist-human.webp" alt="" loading="lazy"></span><span><span class="lab">ПРОТИВНИК</span>Инквизитор Абадара</span></span><span class="med"><span class="g">✦</span><span><span class="lab">ТРОФЕЙ</span>Магический баклер с руной Minor Reinforcing</span></span></div>
+<div class="meds"><span class="med boss" data-lab="ПРОТИВНИК · СЕССИЯ 48" data-name="Инквизитор Абадара" data-note="Продолжает быть активной угрозой в Светоче и других городах с S47. В первом королевском ходу S48 (Рова): магистр Стразор частично сдержал, защищает сквотеров и бедняков от радикалов, но идеология продолжает развиваться." data-glyph="⚔️" data-img="img/s48_gmg-cultist-human.webp"><span class="g"><img src="img/s48_gmg-cultist-human.webp" alt="" loading="lazy"></span><span><span class="lab">ПРОТИВНИК</span>Инквизитор Абадара</span></span><span class="med" data-lab="ТРОФЕЙ · СЕССИЯ 48" data-name="Магический баклер с руной Minor Reinforcing" data-note="Награда от Бевена Армаки за 12 угрей с озера Серебристого Следа" data-glyph="✦"><span class="g">✦</span><span><span class="lab">ТРОФЕЙ</span>Магический баклер с руной Minor Reinforcing</span></span></div>
 <div class="foot"><a href="chapters/s48.html">💬 Пересказ игроков</a><a href="index.html#road/s48">✨ на небе</a></div>
 </div>
 <div class="card l"><span class="knot"></span>
 <span class="sn">СЕССИЯ 49</span><span class="rd">2026-04-16</span>
 <h3>Пир в честь Экундайо, засада на мосту Селена и след культа Героны</h3>
 <p class="sum">Резко — на пир заходит мускулистая женщина-воин с молотом и в броне, явно жрица. Энтави отводит Экундайо в сторону для приватного разговора.</p>
-<div class="meds"><span class="med boss"><span class="g"><img src="img/s49_gragglebeard.webp" alt="" loading="lazy"></span><span><span class="lab">ПРОТИВНИК</span>Граглберт</span></span><span class="med"><span class="g">✦</span><span><span class="lab">ТРОФЕЙ</span>Falchion +1 striking</span></span></div>
+<div class="meds"><span class="med boss" data-lab="ПРОТИВНИК · СЕССИЯ 49" data-name="Граглберт" data-note="Глава банды великанов, разрушившей деревню Экундайо (Бристолхилл, упомянутый Энтави как &#x27;Сальхилл&#x27;/&#x27;Бристолхилл&#x27;). Логово — под древним разрушенным мостом через реку Малый Селен, мост построен инженерами Талдора, сейчас полуразрушен." data-glyph="⚔️" data-img="img/s49_gragglebeard.webp"><span class="g"><img src="img/s49_gragglebeard.webp" alt="" loading="lazy"></span><span><span class="lab">ПРОТИВНИК</span>Граглберт</span></span><span class="med" data-lab="ТРОФЕЙ · СЕССИЯ 49" data-name="Falchion +1 striking" data-note="В сундучке Граглберта под мостом" data-glyph="✦"><span class="g">✦</span><span><span class="lab">ТРОФЕЙ</span>Falchion +1 striking</span></span></div>
 <div class="foot"><a href="chapters/s49.html">💬 Пересказ игроков</a><a href="index.html#road/s49">✨ на небе</a></div>
 </div>
 <div class="card r"><span class="knot"></span>
 <span class="sn">СЕССИЯ 50</span><span class="rd">2026-04-23</span>
 <h3>Засада на культ Героны и побег жрицы Ниски</h3>
 <p class="sum">БОЙ с культистками Героны в подвале амбара. Партия бежит догонять Ниску.</p>
-<div class="meds"><span class="med boss"><span class="g"><img src="img/s50_malgorzata-niska.webp" alt="" loading="lazy"></span><span><span class="lab">ПРОТИВНИК</span>Ниска</span></span><span class="med"><span class="g">✦</span><span><span class="lab">ТРОФЕЙ</span>niska bloodstained cloth</span></span></div>
+<div class="meds"><span class="med boss" data-lab="ПРОТИВНИК · СЕССИЯ 50" data-name="Ниска" data-note="Главарь культа Героны в Светоче. Прибыла в город около 4 месяцев назад под видом мстительницы за обиженных." data-glyph="🕯️" data-img="img/s50_malgorzata-niska.webp"><span class="g"><img src="img/s50_malgorzata-niska.webp" alt="" loading="lazy"></span><span><span class="lab">ПРОТИВНИК</span>Ниска</span></span><span class="med" data-lab="ТРОФЕЙ · СЕССИЯ 50" data-name="niska bloodstained cloth" data-note="После боя — Валери рубанула Ниску, осталась кровь. Бала: &#x27;давайте платочек вымочим в её крови, в осадках что есть, заберём — как пригодится, в любом случае&#x27;." data-glyph="✦"><span class="g">✦</span><span><span class="lab">ТРОФЕЙ</span>niska bloodstained cloth</span></span></div>
 <div class="foot"><a href="chapters/s50.html">💬 Пересказ игроков</a><a href="index.html#road/s50">✨ на небе</a></div>
 </div>
 <div class="card l"><span class="knot"></span>
 <span class="sn">СЕССИЯ 51</span><span class="rd">2026-04-30</span>
 <h3>Охотничий пир на реке Свирь и первый трофей — зелёная виверна</h3>
 <p class="sum">Каэлум сделал recap прошедших 3-х сессий (48-50): партия зачистила подвал с культистами (двое выжили, главарь сбежал свитком), взяли в плен Валерину, после допроса Джейтал-Балы узнали о Чёрных Слёзах и чёрном коте. Жамель объявляет о причине охотничьего домика: они нашли Вата Локера, умершего от виверны, отследили её и нашли следы гидры и</p>
-<div class="meds"><span class="med boss"><span class="g"><img src="img/s51_bloom-wyvern.webp" alt="" loading="lazy"></span><span><span class="lab">ПРОТИВНИК</span>Зелёная говорящая виверна (с шипами)</span></span><span class="med"><span class="g">✦</span><span><span class="lab">ТРОФЕЙ</span>Голова зелёной виверны (трофей)</span></span></div>
+<div class="meds"><span class="med boss" data-lab="ПРОТИВНИК · СЕССИЯ 51" data-name="Зелёная говорящая виверна (с шипами)" data-note="Виверна, охранявшая пещеру с растерзанными трупами в скалах на западе от баржи. ЗЕЛЁНОГО цвета с ШИПАМИ на спине — Стразор по Recall Knowledge на арканах: &#x27;таких виверн нет в моих книгах&#x27;." data-glyph="🐲" data-img="img/s51_bloom-wyvern.webp"><span class="g"><img src="img/s51_bloom-wyvern.webp" alt="" loading="lazy"></span><span><span class="lab">ПРОТИВНИК</span>Зелёная говорящая виверна (с шипами)</span></span><span class="med" data-lab="ТРОФЕЙ · СЕССИЯ 51" data-name="Голова зелёной виверны (трофей)" data-note="Отрезана с убитой зелёной говорящей виверны в пещере на скалах" data-glyph="✦"><span class="g">✦</span><span><span class="lab">ТРОФЕЙ</span>Голова зелёной виверны (трофей)</span></span></div>
 <div class="foot"><a href="chapters/s51.html">💬 Пересказ игроков</a><a href="index.html#road/s51">✨ на небе</a></div>
 </div>
 <div class="card r"><span class="knot"></span>
 <span class="sn">СЕССИЯ 52</span><span class="rd">2026-05-07</span>
 <h3>Охота на чудовищ Свирь: виверна, мухоловка с цветами и встреча с пятиглавой Гидрой</h3>
 <p class="sum">Recap прошлой сессии (S51?) от Стразора и Каэлума: Кингдом-дела прошли неплохо, нивелировали урон стенам, стройки, известность/деньги/еда. БОЙ 1 — Гигантская поражённая мухоловка у водопада.</p>
-<div class="meds"><span class="med boss"><span class="g"><img src="img/s52_giant-flytrap.webp" alt="" loading="lazy"></span><span><span class="lab">ПРОТИВНИК</span>Гигантская мухоловка с лианами (поражённая …</span></span><span class="med"><span class="g">✦</span><span><span class="lab">ТРОФЕЙ</span>Голова Виверны (трофей)</span></span></div>
+<div class="meds"><span class="med boss" data-lab="ПРОТИВНИК · СЕССИЯ 52" data-name="Гигантская мухоловка с лианами (поражённая …" data-note="Гигантское хищное растение, обитающее у каскадного водопада — источника реки Свирь. Огромный шар-голова с пастью на лианах-корнях, окружённое &#x27;десятками гниющих увядших плодов размером с арбуз&#x27;." data-glyph="🌿" data-img="img/s52_giant-flytrap.webp"><span class="g"><img src="img/s52_giant-flytrap.webp" alt="" loading="lazy"></span><span><span class="lab">ПРОТИВНИК</span>Гигантская мухоловка с лианами (поражённая …</span></span><span class="med" data-lab="ТРОФЕЙ · СЕССИЯ 52" data-name="Голова Виверны (трофей)" data-note="После убийства молодой виверны в пещере — Стразор предложил &#x27;отрезаем одну из голов для доказательства&#x27;" data-glyph="✦"><span class="g">✦</span><span><span class="lab">ТРОФЕЙ</span>Голова Виверны (трофей)</span></span></div>
 <div class="foot"><a href="chapters/s52.html">📜 Глава (реконструкция)</a><a href="index.html#road/s52">✨ на небе</a></div>
 </div>
 <div class="card l"><span class="knot"></span>
 <span class="sn">СЕССИЯ 53</span><span class="rd">2026-05-13</span>
 <h3>Добивание Пятиглавой Гидры, кровавые письмена в гнезде, переименование охотничьего домика в «Пронзённую пташку» и вас…</h3>
 <p class="sum">БОЙ 1 (главный). После убийства Гидры партия осматривает гнездо.</p>
-<div class="meds"><span class="med boss"><span class="g"><img src="img/s53_hunting-grounds-hydra.webp" alt="" loading="lazy"></span><span><span class="lab">ПРОТИВНИК</span>Пятиглавая Гидра (ярко-зелёная с красными п…</span></span><span class="med"><span class="g">✦</span><span><span class="lab">ТРОФЕЙ</span>Голова Пятиглавой Гидры (трофей)</span></span></div>
+<div class="meds"><span class="med boss" data-lab="ПРОТИВНИК · СЕССИЯ 53" data-name="Пятиглавая Гидра (ярко-зелёная с красными п…" data-note="Основной босс охотничьего состязания Джамиля, продолжение клиффхэнгера S52. Огромное змеевидное существо с пятью головами, ярко-зелёная чешуя с красными полосками." data-glyph="🐍" data-img="img/s53_hunting-grounds-hydra.webp"><span class="g"><img src="img/s53_hunting-grounds-hydra.webp" alt="" loading="lazy"></span><span><span class="lab">ПРОТИВНИК</span>Пятиглавая Гидра (ярко-зелёная с красными п…</span></span><span class="med" data-lab="ТРОФЕЙ · СЕССИЯ 53" data-name="Голова Пятиглавой Гидры (трофей)" data-note="После убийства Гидры Кроу отрубает одну голову для трофея состязания" data-glyph="✦"><span class="g">✦</span><span><span class="lab">ТРОФЕЙ</span>Голова Пятиглавой Гидры (трофей)</span></span></div>
 <div class="foot"><a href="chapters/s53.html">📜 Читать главу</a><a href="index.html#road/s53">✨ на небе</a></div>
 </div>
 <div class="card r"><span class="knot"></span>
 <span class="sn">СЕССИЯ 54</span><span class="rd">2026-05-28</span>
 <h3>Семена в плоти: расследование проклятия-портала, контракт из Мивона, белый флаг к волкам и битва на лесопилке</h3>
 <p class="sum">День 5 Нета. День 6 Нета.</p>
-<div class="meds"><span class="med boss"><span class="g"><img src="img/s54_owlbear.webp" alt="" loading="lazy"></span><span><span class="lab">ПРОТИВНИК</span>Два медвесыча с кровавой пеленой (с лесопил…</span></span><span class="med"><span class="g">✦</span><span><span class="lab">ТРОФЕЙ</span>Наёмный контракт Тимола из Мивона</span></span></div>
+<div class="meds"><span class="med boss" data-lab="ПРОТИВНИК · СЕССИЯ 54" data-name="Два медвесыча с кровавой пеленой (с лесопил…" data-note="Два медвесыча, ВЫРВАВШИЕСЯ ИЗ ОДНОГО ТЕЛА лесоруба на лесопилке между Светочем и Тацельфордом (стандартный паттерн проклятия-портала)." data-glyph="🐻" data-img="img/s54_owlbear.webp"><span class="g"><img src="img/s54_owlbear.webp" alt="" loading="lazy"></span><span><span class="lab">ПРОТИВНИК</span>Два медвесыча с кровавой пеленой (с лесопил…</span></span><span class="med" data-lab="ТРОФЕЙ · СЕССИЯ 54" data-name="Наёмный контракт Тимола из Мивона" data-note="Кроу обыскал каморку Тимола (Perception, день 6 Нета) и нашёл документ под лежаком" data-glyph="✦"><span class="g">✦</span><span><span class="lab">ТРОФЕЙ</span>Наёмный контракт Тимола из Мивона</span></span></div>
 <div class="foot"><a href="chapters/s54.html">📜 Читать главу</a><a href="index.html#road/s54">✨ на небе</a></div>
 </div>
 <div class="card l"><span class="knot"></span>
 <span class="sn">СЕССИЯ 55</span><span class="rd">2026-06-11</span>
 <h3>Великие гоблины придут: штурм храма Ламашту в Тацельфорде и разоблачение лже-пророчества</h3>
 <p class="sum">Партия спускается в подземный храм Ламашту. БОЙ — Храм Ламашту.</p>
-<div class="meds"><span class="med boss"><span class="g"><img src="img/s55_gyronna-cultist.webp" alt="" loading="lazy"></span><span><span class="lab">ПРОТИВНИК</span>Жрец-фанатик Ламашту (взявший заложника-эль…</span></span><span class="med"><span class="g">📜</span><span><span class="lab">ТРОФЕЙ</span>Свитки с пророчеством &#x27;Великие гоблины прид…</span></span></div>
+<div class="meds"><span class="med boss" data-lab="ПРОТИВНИК · СЕССИЯ 55" data-name="Жрец-фанатик Ламашту (взявший заложника-эль…" data-note="Главный жрец культа в подземном храме Ламашту в Тацельфорде. Призывает Spiritual Weapon — четыре призрачных кукри-клинка которые окружают Стразора весь бой." data-glyph="🕯️" data-img="img/s55_gyronna-cultist.webp"><span class="g"><img src="img/s55_gyronna-cultist.webp" alt="" loading="lazy"></span><span><span class="lab">ПРОТИВНИК</span>Жрец-фанатик Ламашту (взявший заложника-эль…</span></span><span class="med" data-lab="ТРОФЕЙ · СЕССИЯ 55" data-name="Свитки с пророчеством &#x27;Великие гоблины прид…" data-note="После боя осмотрены тексты на стенах храма + собраны ритуальные свитки. Нок-Нок частично потрошил кукри, но партия зафиксировала содержимое." data-glyph="📜"><span class="g">📜</span><span><span class="lab">ТРОФЕЙ</span>Свитки с пророчеством &#x27;Великие гоблины прид…</span></span></div>
 <div class="foot"><a href="chapters/s55.html">📜 Читать главу</a><a href="index.html#road/s55">✨ на небе</a></div>
 </div>
 <div class="arc"><span>Технолига наступает</span></div>
@@ -493,21 +512,21 @@ p.sum{font-size:13.5px;line-height:1.55;color:#4c3c22}
 <span class="sn">СЕССИЯ 56</span><span class="rd">2026-06-23</span>
 <h3>Зерно для Бездны: следы Технолиги у лесопилки, культ Цветения обретает имя и месяц королевских дел</h3>
 <p class="sum">По пути к лесопилке, на срезе через лес — очень странные следы: огромный двуногий гуманоид (size large) с тремя-четырьмя пальцами &#x27;буквой З&#x27;. На лесопилке (закрыта, оцеплена стражей) Стразор с Detect Magic и медициной осматривает лесорубов и находит ДВОИХ БОЛЬНЫХ с ещё не активированными семенами.</p>
-<div class="meds"><span class="med boss"><span class="g"><img src="img/s56_Pusk.webp" alt="" loading="lazy"></span><span><span class="lab">ПРОТИВНИК</span>Паск (низший демон греха лени)</span></span><span class="med"><span class="g">✦</span><span><span class="lab">ТРОФЕЙ</span>Извлечённые чёрные семена (две склянки)</span></span></div>
+<div class="meds"><span class="med boss" data-lab="ПРОТИВНИК · СЕССИЯ 56" data-name="Паск (низший демон греха лени)" data-note="Когда Бала на опушке леса проводила привычный оккультный ритуал связи со знакомыми из Первого мира, ей ответила &#x27;мерзкая морда паска&#x27; — лысого, жирного, рогатого, еле шевелящегося низшего демона, рождённого из греха лени." data-glyph="⚔️" data-img="img/s56_Pusk.webp"><span class="g"><img src="img/s56_Pusk.webp" alt="" loading="lazy"></span><span><span class="lab">ПРОТИВНИК</span>Паск (низший демон греха лени)</span></span><span class="med" data-lab="ТРОФЕЙ · СЕССИЯ 56" data-name="Извлечённые чёрные семена (две склянки)" data-note="Хирургически извлечены из двух больных лесорубов на лесопилке (Detect Magic + медицина, стража придерживала пациентов). Вне носителей быстро деактивировались." data-glyph="✦"><span class="g">✦</span><span><span class="lab">ТРОФЕЙ</span>Извлечённые чёрные семена (две склянки)</span></span></div>
 <div class="foot"><a href="chapters/s56.html">📜 Читать главу</a><a href="index.html#road/s56">✨ на небе</a></div>
 </div>
 <div class="card l"><span class="knot"></span>
 <span class="sn">СЕССИЯ 57</span><span class="rd">2026-06-25</span>
 <h3>Маска шамана: перформанс &#x27;Нок-Нок — избранник Ламашту&#x27; у ворот Зеленохватия и дуппельгангер под маской верховного жреца</h3>
 <p class="sum">План Балы: &#x27;У нас же Нок-Нок. Кульминация перформанса.</p>
-<div class="meds"><span class="med boss"><span class="g"><img src="img/s57_doppelganger.webp" alt="" loading="lazy"></span><span><span class="lab">ПРОТИВНИК</span>Верховный шаман Зеленохватия (дуппельгангер…</span></span><span class="med"><span class="g">✦</span><span><span class="lab">ТРОФЕЙ</span>Магический док-слайсер +1 striking (трофей …</span></span></div>
+<div class="meds"><span class="med boss" data-lab="ПРОТИВНИК · СЕССИЯ 57" data-name="Верховный шаман Зеленохватия (дуппельгангер…" data-note="Главный антагонист сессии. Вышел навстречу партии в шлеме &#x27;очень странной формы&#x27; (на деле — не шлем), с зелёным друидическим украшением в руках и гоблинским тесаком-докслайсером на поясе." data-glyph="🪶" data-img="img/s57_doppelganger.webp"><span class="g"><img src="img/s57_doppelganger.webp" alt="" loading="lazy"></span><span><span class="lab">ПРОТИВНИК</span>Верховный шаман Зеленохватия (дуппельгангер…</span></span><span class="med" data-lab="ТРОФЕЙ · СЕССИЯ 57" data-name="Магический док-слайсер +1 striking (трофей …" data-note="Украден боевым манёвром Steal у заграпленного шамана прямо посреди боя — после того как аналогичная попытка Балы провалилась." data-glyph="✦"><span class="g">✦</span><span><span class="lab">ТРОФЕЙ</span>Магический док-слайсер +1 striking (трофей …</span></span></div>
 <div class="foot"><a href="chapters/s57.html">📜 Читать главу</a><a href="index.html#road/s57">✨ на небе</a></div>
 </div>
 <div class="card r"><span class="knot"></span>
 <span class="sn">СЕССИЯ 58</span><span class="rd">2026-07-03</span>
 <h3>Ласточка и Три Пальца: пустая деревня после дуппельгангера, потерянная строка Ten Trials из колыбельной, погоня за сн…</h3>
 <p class="sum">4 Кутона. 4 Кутона.</p>
-<div class="meds"><span class="med boss"><span class="g"><img src="img/s58_TL_Sniper.webp" alt="" loading="lazy"></span><span><span class="lab">ПРОТИВНИК</span>Снайпер Технолиги (пленный агент, владелец …</span></span><span class="med"><span class="g">🏹</span><span><span class="lab">ТРОФЕЙ</span>&#x27;Ласточка&#x27; — снайперская винтовка агента Те…</span></span></div>
+<div class="meds"><span class="med boss" data-lab="ПРОТИВНИК · СЕССИЯ 58" data-name="Снайпер Технолиги (пленный агент, владелец …" data-note="Стрелял в Валери с крыши посреди Светоча (&#x27;яркая вспышка красного пламени&#x27;) — она выдержала попадание. Пойман погоней Валери/Джубилоста/Октавии/Регонгара; при задержании: &#x27;Вы меня схватили, но остальные..." data-glyph="⚙️" data-img="img/s58_TL_Sniper.webp"><span class="g"><img src="img/s58_TL_Sniper.webp" alt="" loading="lazy"></span><span><span class="lab">ПРОТИВНИК</span>Снайпер Технолиги (пленный агент, владелец …</span></span><span class="med" data-lab="ТРОФЕЙ · СЕССИЯ 58" data-name="&#x27;Ласточка&#x27; — снайперская винтовка агента Те…" data-note="Изъята у пойманного снайпера после погони; имя &#x27;Ласточка&#x27; узнали на допросе. Нужно несколько дней даунтайма на освоение; патроны — конечный боезапас." data-glyph="🏹"><span class="g">🏹</span><span><span class="lab">ТРОФЕЙ</span>&#x27;Ласточка&#x27; — снайперская винтовка агента Те…</span></span></div>
 <div class="foot"><a href="chapters/s58.html">📜 Читать главу</a><a href="index.html#road/s58">✨ на небе</a></div>
 </div>
 <div class="fin">«Свиток не окончен — перо Линзи ещё в чернилах…»</div>
@@ -517,41 +536,81 @@ p.sum{font-size:13.5px;line-height:1.55;color:#4c3c22}
 const io=new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting)e.target.classList.add('vis');}),{threshold:0.08});
 document.querySelectorAll('.card').forEach(c=>io.observe(c));
 
-// лес вдоль дороги: детерминированное рассеивание
+// извилистый просёлок + лес + верёвочки карточек
 function rnd(s){let x=Math.sin(s*127.1+311.7)*43758.5453;return x-Math.floor(x);}
 const FLORA=['🌲','🌲','🌲','🌲','🌳','🌳','🌳','🌿','🌿','🍄','🪨','🌾','🌾','🌱'];
 const RARE=['🦌','🐿️','🦉','🏕️','🪵'];
-function plantForest(){
-  const box=document.getElementById('flora');
-  box.innerHTML='';
+let baseX=0;
+function roadXAt(y){
+  return baseX+Math.sin(y*0.006)*26+Math.sin(y*0.0016)*40;
+}
+function decorate(){
   const scroll=document.getElementById('scroll');
   const H=scroll.scrollHeight,W=scroll.clientWidth;
-  const road=document.querySelector('.road');
-  const roadX=road.offsetLeft+road.offsetWidth/2;
-  const n=Math.floor(H/46);
+  baseX=W>700?W/2:56;
+  // дорога
+  const svg=document.getElementById('roadSvg');
+  svg.setAttribute('viewBox','0 0 '+W+' '+H);
+  svg.setAttribute('width',W);svg.setAttribute('height',H);
+  let d='';
+  for(let y=130;y<H-50;y+=26){
+    d+=(d?' L':'M')+roadXAt(y).toFixed(1)+' '+y;
+  }
+  svg.innerHTML=
+    '<path d="'+d+'" fill="none" stroke="#5c4626" stroke-width="17" stroke-linecap="round" stroke-linejoin="round" opacity="0.5"/>'+
+    '<path d="'+d+'" fill="none" stroke="#8a6f45" stroke-width="12" stroke-linecap="round" stroke-linejoin="round" opacity="0.95"/>'+
+    '<path d="'+d+'" fill="none" stroke="#a08654" stroke-width="5" stroke-linecap="round" stroke-linejoin="round" opacity="0.5" stroke-dasharray="2 26"/>';
+  // верёвочки от карточек к дороге
+  const flora=document.getElementById('flora');
+  flora.innerHTML='';
   let html='';
+  document.querySelectorAll('.card').forEach(c=>{
+    const y=c.offsetTop+27;
+    const rx=roadXAt(y);
+    const isL=c.classList.contains('l');
+    const edge=isL?c.offsetLeft+c.offsetWidth:c.offsetLeft;
+    const x1=Math.min(edge,rx),x2=Math.max(edge,rx);
+    html+='<span class="lead" style="left:'+x1.toFixed(0)+'px;width:'+(x2-x1).toFixed(0)+'px;top:'+y+'px"></span>';
+    html+='<span class="rknot" style="left:'+(rx-7.5).toFixed(0)+'px;top:'+(y-6).toFixed(0)+'px"></span>';
+  });
+  // лес
+  const n=Math.floor(H/46);
   for(let i=0;i<n;i++){
     const y=140+rnd(i*3+1)*(H-260);
     let x;
-    const r=rnd(i*3+2);
-    if(r<0.45){ // обочина у дороги
+    if(rnd(i*3+2)<0.45){
       const side=rnd(i*7+3)<0.5?-1:1;
-      x=roadX+side*(26+rnd(i*5+4)*70);
-    }else{ // опушки по краям пергамента
+      x=roadXAt(y)+side*(26+rnd(i*5+4)*70);
+    }else{
       x=rnd(i*11+5)<0.5? 8+rnd(i*13+6)*(W*0.06) : W-14-rnd(i*17+7)*(W*0.06);
     }
     const rare=rnd(i*19+8)<0.05;
     const g=rare?RARE[Math.floor(rnd(i*23+9)*RARE.length)]:FLORA[Math.floor(rnd(i*23+9)*FLORA.length)];
     const size=(g==='🌲'||g==='🌳')?15+rnd(i*29+10)*17:11+rnd(i*29+10)*9;
-    const rot=(rnd(i*31+11)-0.5)*18;
-    const op=0.3+rnd(i*37+12)*0.3;
-    html+='<span class="fl" style="left:'+x.toFixed(0)+'px;top:'+y.toFixed(0)+'px;font-size:'
-      +size.toFixed(0)+'px;opacity:'+op.toFixed(2)+';transform:rotate('+rot.toFixed(0)+'deg)">'+g+'</span>';
+    html+='<span class="fl" style="left:'+x.toFixed(0)+'px;top:'+y.toFixed(0)+'px;font-size:'+size.toFixed(0)
+      +'px;opacity:'+(0.3+rnd(i*37+12)*0.3).toFixed(2)+';transform:rotate('+((rnd(i*31+11)-0.5)*18).toFixed(0)+'deg)">'+g+'</span>';
   }
-  box.innerHTML=html;
+  flora.innerHTML=html;
 }
-plantForest();
+addEventListener('load',decorate);
+setTimeout(decorate,60);
 let frT=null;
-addEventListener('resize',()=>{clearTimeout(frT);frT=setTimeout(plantForest,250);});
+addEventListener('resize',()=>{clearTimeout(frT);frT=setTimeout(decorate,250);});
+
+// лайтбокс медальонов
+document.addEventListener('click',e=>{
+  const m=e.target.closest('.med');
+  if(!m)return;
+  const lb=document.getElementById('lb');
+  const img=document.getElementById('lbImg'),gl=document.getElementById('lbGlyph');
+  const src=m.dataset.img;
+  if(src){img.src=src;img.style.display='block';gl.style.display='none';}
+  else{gl.textContent=m.dataset.glyph||'✦';gl.style.display='block';img.style.display='none';}
+  document.getElementById('lbLab').textContent=m.dataset.lab||'';
+  document.getElementById('lbName').textContent=m.dataset.name||'';
+  document.getElementById('lbNote').textContent=m.dataset.note||'';
+  lb.classList.add('show');
+});
+addEventListener('keydown',e=>{if(e.key==='Escape')document.getElementById('lb').classList.remove('show');});
 </script>
 </body></html>
