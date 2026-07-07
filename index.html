@@ -585,6 +585,23 @@ function draw(ts){
     }
     // планеты
     ctx.font='11.5px Georgia';
+    const placed=[]; // занятые подписи для разруливания наложений
+    function labelSlot(lx,ly,w,align,lines){
+      const x1=align==='left'?lx:align==='right'?lx-w:lx-w/2;
+      const x2=x1+w;
+      let y=ly;
+      for(let b=0;b<5;b++){
+        let clash=false;
+        for(const q of placed){
+          if(x1<q.x2+6&&x2>q.x1-6&&(Math.abs(q.y-y)<12||(lines>1&&Math.abs(q.y-(y+12.5))<12))){clash=true;break;}
+        }
+        if(!clash)break;
+        y+=13;
+      }
+      placed.push({x1,x2,y});
+      if(lines>1)placed.push({x1,x2,y:y+12.5});
+      return y;
+    }
     for(const sub of subs){
       const [X,Y]=subXY(sub);
       if(X<-80||X>innerWidth+80)continue;
@@ -610,19 +627,26 @@ function draw(ts){
         const below=Math.abs(co)<=0.25&&Math.sin(sub.a)>0;
         let ly=Y+Math.sin(sub.a)*0.72*(R+9)+(Math.abs(co)<=0.25?(below?13:-8):4);
         let t=sub.ev.t;
+        const align=ctx.textAlign;
         if(t.length>19){
-          // перенос по пробелу ближе к середине
           let cut=-1,mid=t.length/2;
           for(let q=0;q<t.length;q++)if(t[q]===' '&&(cut<0||Math.abs(q-mid)<Math.abs(cut-mid)))cut=q;
           if(cut>0){
-            const l1=t.slice(0,cut),l2=t.slice(cut+1);
-            if(!below&&Math.abs(co)<=0.25)ly-=12; // над планетой: сдвиг вверх под 2 строки
-            ctx.fillText(l1.length>26?l1.slice(0,25)+'…':l1,lx,ly);
-            ctx.fillText(l2.length>26?l2.slice(0,25)+'…':l2,lx,ly+12.5);
+            let l1=t.slice(0,cut),l2=t.slice(cut+1);
+            if(l1.length>26)l1=l1.slice(0,25)+'…';
+            if(l2.length>26)l2=l2.slice(0,25)+'…';
+            if(!below&&Math.abs(co)<=0.25)ly-=12;
+            const w=Math.max(ctx.measureText(l1).width,ctx.measureText(l2).width);
+            ly=labelSlot(lx,ly,w,align,2);
+            ctx.fillText(l1,lx,ly);
+            ctx.fillText(l2,lx,ly+12.5);
           }else{
-            ctx.fillText(t.length>34?t.slice(0,33)+'…':t,lx,ly);
+            if(t.length>34)t=t.slice(0,33)+'…';
+            ly=labelSlot(lx,ly,ctx.measureText(t).width,align,1);
+            ctx.fillText(t,lx,ly);
           }
         }else{
+          ly=labelSlot(lx,ly,ctx.measureText(t).width,align,1);
           ctx.fillText(t,lx,ly);
         }
       }
