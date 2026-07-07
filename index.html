@@ -387,15 +387,23 @@ const wxAt=px=>(px-innerWidth/2)/view.zoom+view.cx;
 const sessIdxByN={};ENRICH.sessions.forEach((s,i)=>sessIdxByN[s.n]=i);
 const skyIdxByN={};SKY.forEach((s,k)=>skyIdxByN[s.n]=k);
 const SIGR={critical:4.6,high:3.7,medium:2.9,low:2.3};
-const subs=[]; // плоский список событий для пикинга/отрисовки
+const subs=[]; // события-«планеты» на орбитах вокруг звезды-сессии
+const GA=2.399963; // золотой угол
+const ORBITS=[58,96,134];
+function rndS(s){let x=Math.sin(s*127.1+311.7)*43758.5453;return x-Math.floor(x);}
 SKY.forEach((s,k)=>{
-  const c=s.events.length;
   s.events.forEach((ev,j)=>{
-    const wx=sxOf(k)+ (j+1)/(c+1)*SESSION_STEP*0.9;
-    const off=((j%2?1:-1)*(30+(j*29)%70));
-    subs.push({k,n:s.n,j,wx,off,ev});
+    const ring=ORBITS[Math.min(2,Math.floor(j/7))]+(rndS(k*13+j)*14-7);
+    const a=j*GA+rndS(k*7)*6.283;
+    subs.push({k,n:s.n,j,a,r:ring,ev});
   });
 });
+function orbScale(){return Math.min(1.05,view.zoom);}
+function subXY(sub){
+  const cx=sx(sxOf(sub.k)),cy=syW(sxOf(sub.k));
+  const s=orbScale();
+  return [cx+Math.cos(sub.a)*sub.r*s, cy+Math.sin(sub.a)*sub.r*0.72*s];
+}
 const SARCS=[
  {n:1,t:'Путь в Украденные земли'},
  {n:6,t:'Пост Олега и Зелёный пояс'},
@@ -550,46 +558,59 @@ function draw(ts){
   }
   const dim=anyFilter();
   const t2=perf*0.002;
-  const evVis=clamp((view.zoom-0.42)/0.18,0,1);   // проявление событий
+  const evVis=clamp((view.zoom-0.38)/0.18,0,1);   // проявление событий
   const evLab=clamp((view.zoom-0.85)/0.25,0,1);   // подписи событий
-  // события внутри сессий
+  // планетные системы сессий
   if(evVis>0){
-    let labN=0;
-    ctx.font='11.5px Georgia';ctx.textAlign='center';
-    let prevX=null,prevY=null,prevK=-1;
-    for(const sub of subs){
-      const X=sx(sub.wx);
-      if(X<-80||X>innerWidth+80){prevK=-1;continue;}
-      const Y=syW(sub.wx)+sub.off*Math.min(1,view.zoom)*0.9;
-      const match=subMatch(sub);
-      const a=evVis*(match?1:0.12)*(0.8+0.2*Math.sin(t2+sub.wx));
-      // ниточка внутри сессии
-      if(prevK===sub.k&&prevX!==null){
-        ctx.globalAlpha=a*0.35;
-        ctx.strokeStyle=dim&&match?'rgba(212,175,106,0.9)':'rgba(154,163,192,0.5)';
-        ctx.lineWidth=dim&&match?1.4:0.8;
-        ctx.beginPath();ctx.moveTo(prevX,prevY);ctx.lineTo(X,Y);ctx.stroke();
+    const s=orbScale();
+    // кольца орбит
+    for(let k=0;k<SN;k++){
+      const cnt=SKY[k].events.length;
+      if(!cnt)continue;
+      const cx=sx(sxOf(k));if(cx<-260||cx>innerWidth+260)continue;
+      const cy=syW(sxOf(k));
+      const rings=Math.min(3,Math.ceil(cnt/7));
+      ctx.strokeStyle='rgba(154,163,192,1)';
+      for(let ri=0;ri<rings;ri++){
+        ctx.globalAlpha=evVis*0.1;
+        ctx.lineWidth=1;
+        ctx.beginPath();
+        ctx.ellipse(cx,cy,ORBITS[ri]*s,ORBITS[ri]*0.72*s,0,0,7);
+        ctx.stroke();
       }
-      prevX=X;prevY=Y;prevK=sub.k;
+      ctx.globalAlpha=1;
+    }
+    // планеты
+    ctx.font='11.5px Georgia';
+    for(const sub of subs){
+      const [X,Y]=subXY(sub);
+      if(X<-80||X>innerWidth+80)continue;
+      const match=subMatch(sub);
+      const a=evVis*(match?1:0.12)*(0.8+0.2*Math.sin(t2+sub.a*3));
       const cc=sub.ev.k==='encounter'?'#c0563a':'#1fb3a5';
       const selSub=currentSub&&currentSub.k===sub.k&&currentSub.j===sub.j;
       const R=(SIGR[sub.ev.s]||2.9)*(0.75+0.35*Math.min(view.zoom,1.6))*(selSub?2:1);
       ctx.globalAlpha=a*0.35;
-      const g=ctx.createRadialGradient(X,Y,0,X,Y,R*3.4);
+      const g=ctx.createRadialGradient(X,Y,0,X,Y,R*3.2);
       g.addColorStop(0,cc);g.addColorStop(1,'rgba(0,0,0,0)');
-      ctx.fillStyle=g;ctx.beginPath();ctx.arc(X,Y,R*3.4,0,7);ctx.fill();
+      ctx.fillStyle=g;ctx.beginPath();ctx.arc(X,Y,R*3.2,0,7);ctx.fill();
       ctx.globalAlpha=a;
       ctx.fillStyle=cc;ctx.beginPath();ctx.arc(X,Y,R,0,7);ctx.fill();
       ctx.fillStyle='rgba(255,255,255,0.8)';ctx.beginPath();ctx.arc(X,Y,R*0.4,0,7);ctx.fill();
+      // радиальная подпись
       if(evLab>0&&(match||!dim)){
-        const lvl=(labN++)%4;
+        const co=Math.cos(sub.a);
         ctx.globalAlpha=a*evLab*0.9;
         ctx.fillStyle='#e8e4d8';
-        const short=sub.ev.t.length>40?sub.ev.t.slice(0,39)+'…':sub.ev.t;
-        ctx.fillText(short,X,Y-R-10-lvl*15);
+        ctx.textAlign=co>0.25?'left':co<-0.25?'right':'center';
+        const lx=X+co*(R+9);
+        const ly=Y+Math.sin(sub.a)*0.72*(R+9)+(Math.abs(co)<=0.25?(Math.sin(sub.a)>0?12:-7):4);
+        const short=sub.ev.t.length>34?sub.ev.t.slice(0,33)+'…':sub.ev.t;
+        ctx.fillText(short,lx,ly);
       }
       ctx.globalAlpha=1;
     }
+    ctx.textAlign='center';
   }
   // сессии-звёзды
   ctx.textAlign='center';
@@ -701,8 +722,8 @@ function pickSky(px,py){
   if(view.zoom>0.45){
     let best=null,bd=20*20;
     for(const sub of subs){
-      const X=sx(sub.wx);if(X<-40||X>innerWidth+40)continue;
-      const Y=syW(sub.wx)+sub.off*Math.min(1,view.zoom)*0.9;
+      const [X,Y]=subXY(sub);
+      if(X<-40||X>innerWidth+40)continue;
       const d=(X-px)*(X-px)+(Y-py)*(Y-py);
       if(d<bd){bd=d;best={type:'sub',sub};}
     }
