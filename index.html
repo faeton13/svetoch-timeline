@@ -374,7 +374,8 @@ addEventListener('resize',sizeCanvas);sizeCanvas();
 tzoom=view.zoom=minZoom;   // старт: вся кампания одним небом
 const CY=()=>innerHeight*0.52;
 const sx=wx=>(wx-view.cx)*view.zoom+innerWidth/2;
-const sy=i=>CY()+wy(i)*view.zoom;
+const wamp=()=>Math.min(1.15,Math.pow(view.zoom,0.55)*1.5);
+const sy=i=>CY()+wy(i)*wamp();
 const wxAt=px=>(px-innerWidth/2)/view.zoom+view.cx;
 
 /* соответствие событие → NPC (через связанные сессии) */
@@ -481,19 +482,28 @@ function draw(ts){
       ctx.fillText(m.label+(view.zoom>0.5?' '+m.year:''),X-4,Y+6);
     }
   }
-  // арки-«созвездия»
+  // арки-«созвездия» (подписи без наложений)
   ctx.textAlign='left';
-  for(const a of arcStarts){
-    const X=sx(ex(a.i));if(X<-400||X>innerWidth+100)continue;
+  {
     const big=view.zoom<0.28;
-    ctx.fillStyle='rgba(212,175,106,'+(big?0.75:0.4)+')';
-    ctx.font=(big?17:14)+'px Georgia';
-    ctx.fillText(a.t,X+4,Math.max(84,CY()-236*view.zoom-40));
-    ctx.strokeStyle='rgba(212,175,106,0.2)';
-    ctx.beginPath();ctx.moveTo(X,Math.max(90,CY()-236*view.zoom-34));ctx.lineTo(X,sy(a.i)-14);ctx.stroke();
+    ctx.font=(big?16:14)+'px Georgia';
+    let lastEnd=-1e9;
+    const aY=Math.max(84,CY()-236*Math.min(view.zoom,0.8)-40);
+    for(const a of arcStarts){
+      const X=sx(ex(a.i));if(X<-500||X>innerWidth+100)continue;
+      ctx.strokeStyle='rgba(212,175,106,0.2)';
+      ctx.beginPath();ctx.moveTo(X,aY+8);ctx.lineTo(X,sy(a.i)-14);ctx.stroke();
+      if(X+4>lastEnd+18){
+        const w=ctx.measureText(a.t).width;
+        ctx.fillStyle='rgba(212,175,106,'+(big?0.75:0.45)+')';
+        ctx.fillText(a.t,X+4,aY);
+        lastEnd=X+4+w;
+      }
+    }
   }
-  // события-звёзды
+  // события-звёзды (LOD: на дальнем зуме полновесная — раз в k)
   const t2=perf*0.002;
+  const lodK=Math.max(1,Math.ceil(15/(STEP*view.zoom)));
   for(let i=0;i<N;i++){
     const X=sx(ex(i));if(X<-60||X>innerWidth+60)continue;
     const Y=sy(i);
@@ -501,6 +511,16 @@ function draw(ts){
     const isNow=ev.color==='#ff0066';
     const match=evMatch(i);
     const cc=isNow?'#ff0066':(TYPE_CSS[ev.type]||'#1fb3a5');
+    const fullStar=isNow||(dim&&match)||i%lodK===0;
+    if(!fullStar){
+      // искра между большими звёздами
+      const tws=0.5+0.5*Math.sin(t2*1.3+i*2.3);
+      ctx.globalAlpha=(match?0.6:0.1)*tws;
+      ctx.fillStyle=cc;
+      ctx.beginPath();ctx.arc(X,Y,1.3,0,7);ctx.fill();
+      ctx.globalAlpha=1;
+      continue;
+    }
     const base=isNow?7:(ev.type==='location'?5.2:ev.type==='travel'?3.2:4.2);
     const tw=0.82+0.18*Math.sin(t2+i*1.71);
     const a=(match?1:0.15)*tw;
