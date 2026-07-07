@@ -504,6 +504,7 @@ function draw(ts){
   // события-звёзды (LOD: на дальнем зуме полновесная — раз в k)
   const t2=perf*0.002;
   const lodK=Math.max(1,Math.ceil(15/(STEP*view.zoom)));
+  let labN=0;
   for(let i=0;i<N;i++){
     const X=sx(ex(i));if(X<-60||X>innerWidth+60)continue;
     const Y=sy(i);
@@ -544,8 +545,8 @@ function draw(ts){
     // подписи (LOD)
     const showLab=view.zoom>0.55||isNow||(dim&&match&&view.zoom>0.2);
     if(showLab){
-      const lvl=(i%3);
-      const ly=Y-R-14-lvl*17;
+      const lvl=(labN++)%4;
+      const ly=Y-R-16-lvl*26;
       ctx.font='12px Georgia';ctx.textAlign='center';
       const short=ev.title.length>34?ev.title.slice(0,33)+'…':ev.title;
       ctx.fillStyle=isNow?'rgba(255,126,178,'+a+')':'rgba(232,228,216,'+(0.85*a)+')';
