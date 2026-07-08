@@ -711,19 +711,20 @@ function draw(ts){
   {
     const big=view.zoom<0.2;
     ctx.font=(big?16:14)+'px Georgia';ctx.textAlign='left';
-    let lastEnd=-1e9;
+    const rowEnd=[-1e9,-1e9,-1e9]; // подписи арок: при наложении — строкой ниже
     const aY=Math.max(84,CY()-260*Math.min(view.zoom,0.8)-40);
     for(const a of SARCS){
       const k=skyIdxByN[a.n];if(k===undefined)continue;
       const X=sx(sxOf(k));if(X<-500||X>innerWidth+100)continue;
+      const w=ctx.measureText(a.t).width;
+      let row=rowEnd.findIndex(e=>X+4>e+18);
+      if(row<0)row=rowEnd.indexOf(Math.min(...rowEnd));
+      const yy=aY+row*(big?19:17);
       ctx.strokeStyle='rgba(212,175,106,0.2)';
-      ctx.beginPath();ctx.moveTo(X,aY+8);ctx.lineTo(X,syW(sxOf(k))-16);ctx.stroke();
-      if(X+4>lastEnd+18){
-        const w=ctx.measureText(a.t).width;
-        ctx.fillStyle='rgba(212,175,106,'+(big?0.75:0.45)+')';
-        ctx.fillText(a.t,X+4,aY);
-        lastEnd=X+4+w;
-      }
+      ctx.beginPath();ctx.moveTo(X,yy+8);ctx.lineTo(X,syW(sxOf(k))-16);ctx.stroke();
+      ctx.fillStyle='rgba(212,175,106,'+(big?0.75:0.45)+')';
+      ctx.fillText(a.t,X+4,yy);
+      rowEnd[row]=X+4+w;
     }
   }
   const p=view.cx/WORLD_W*100;
