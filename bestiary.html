@@ -52,6 +52,14 @@ header nav a:hover,.fbtn:hover{background:rgba(140,47,34,.08)}
   padding:2px 8px}
 .bc .st b{font-weight:normal;color:var(--seal)}
 .bc .unk{font-size:11px;color:var(--faded);font-style:italic}
+/* «Что видели своими глазами» (#131): слой поверх трекера. Отличается
+   от раскрытого мастером намеренно — читатель должен видеть, что это
+   наблюдение партии, а не выведанная характеристика. */
+.bc .obs{background:rgba(246,238,220,.55);border:1px dashed rgba(110,85,45,.45);
+  border-radius:8px;padding:2px 8px}
+.bc .obs i{font-style:normal;color:var(--faded);font-size:10px;margin-left:5px}
+.bc .obsh{font-size:10.5px;color:var(--faded);font-style:italic;
+  text-transform:uppercase;letter-spacing:.04em;width:100%}
 .bc .note{font-size:12px;line-height:1.45;color:#4c3c22;font-style:italic}
 .cnt{text-align:center;color:var(--faded);font-size:12px;margin:14px 0 6px;font-style:italic}
 .fin{text-align:center;padding:40px 0 0;color:var(--faded);font-style:italic;font-size:13px}
@@ -78,6 +86,10 @@ header nav a:hover,.fbtn:hover{background:rgba(140,47,34,.08)}
 #lbin .st{background:rgba(255,252,240,.65);border:1px solid rgba(110,85,45,.4);
   border-radius:8px;padding:3px 10px}
 #lbin .unk{font-size:12.5px;color:var(--faded);font-style:italic}
+#lbin .obs{background:rgba(246,238,220,.6);border:1px dashed rgba(110,85,45,.5);
+  border-radius:8px;padding:3px 10px}
+#lbin .obs i{font-style:normal;color:var(--faded);font-size:11px;margin-left:6px}
+#lbin .obsh{font-size:12px;color:var(--faded);font-style:italic;width:100%}
 #lbin .abil{display:flex;flex-direction:column;gap:9px;
   border-top:1px solid rgba(110,85,45,.28);padding-top:11px;margin-top:3px}
 #lbin .ab{font-size:13.5px;line-height:1.5}
@@ -103,6 +115,7 @@ header nav a:hover,.fbtn:hover{background:rgba(140,47,34,.08)}
   <nav>
     <a href="index.html">✨ звёздное небо</a>
     <a href="scroll.html">📜 свиток</a>
+    <a href="graph.html">🕸️ связи</a>
   </nav>
 </header>
 <div id="bar">
